@@ -1,0 +1,13 @@
+@PACKAGE_INIT@
+
+set( vamos_hyper_BUILD_TYPE @CMAKE_BUILD_TYPE@ )
+set( vamos_hyper_C_COMPILER @CMAKE_C_COMPILER@ )
+set( vamos_hyper_CXX_COMPILER @CMAKE_CXX_COMPILER@ )
+set( vamos_hyper_BINARY_DIR @vamos-hyper_BINARY_DIR@ )
+set( vamos_hyper_SOURCE_DIR @vamos-hyper_BINARY_DIR@ )
+set( vamos_hyper_INCLUDE_DIRS "${CMAKE_CURRENT_LIST_DIR}/../../include" )
+set( vamos_hyper_INSTALL_PREFIX @CMAKE_INSTALL_PREFIX@ )
+set( vamos_hyper_OPTION_ENABLE_IPO @ENABLE_IPO@ )
+
+include ( "${CMAKE_CURRENT_LIST_DIR}/vamos-hyper.cmake" )
+
