@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.9)
 project(vamos-hyper LANGUAGES CXX VERSION 0.1)
 
+find_package(vamos-buffers REQUIRED)
+
 enable_testing()
 
 set(CMAKE_VERBOSE_MAKEFILE 1)
@@ -27,7 +29,7 @@ endif(ENABLE_IPO)
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
-add_compile_options(-Wall -Wextra -pedantic)
+add_compile_options(-Wall -Wextra -pedantic -fno-rtti -fno-exceptions)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
