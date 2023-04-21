@@ -12,6 +12,4 @@ public:
 } // namespace hyper
 } // namespace vamos
 
-
-
 #endif // VAMOS_HYPER_TRACE_H

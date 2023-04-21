@@ -4,18 +4,13 @@
 namespace vamos {
 namespace hyper {
 
-enum class StepResult {
-    None,
-    Progress,
-    Failed,
-    Succeeded
-};
+enum class StepResult { None, Progress, Failed, Succeeded };
 
 class TraceTransformer {
 
 public:
-    virtual StepResult step() = 0;
-    virtual StepResult last_step() = 0;
+  virtual StepResult step() = 0;
+  virtual StepResult last_step() = 0;
 };
 
 class HyperTraceTransformer {
