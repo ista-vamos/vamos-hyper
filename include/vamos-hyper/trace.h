@@ -22,10 +22,15 @@ public:
     virtual ~Trace() = default;
 
     /* size = the real size of the event */
-    bool push(const Event &event, size_t size);
+    bool push(const Event &event) {
+        updateTP();
+        return push_impl(event);
+    }
+
+    void updateTP();
 
     /* override this method to push a new event into the trace */
-    virtual bool push_impl(const Event &event, size_t size) = 0;
+    virtual bool push_impl(const Event &event) = 0;
 
     virtual Event *get(size_t idx = 0) = 0;
     //virtual const Event *get(size_t idx = 0) const = 0;

@@ -7,9 +7,8 @@ namespace hyper {
 
 Trace::Trace(TracesPipeline& TP): _id(TP.newTraceID()), TP(TP)  {}
 
-bool Trace::push(const Event &event, size_t size) {
+void Trace::updateTP() {
     TP.updated(this);
-    return push_impl(event, size);
 }
 
 } // namespace hyper

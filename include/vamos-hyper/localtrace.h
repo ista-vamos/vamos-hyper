@@ -21,13 +21,12 @@ public:
     LocalTrace(TracesPipeline& TP):
         Trace(TP), reader(rb), writer(rb), data(new BufferElemTy[BufferCapacity]) {}
 
-    bool push_impl(const Event &event, size_t size) override {
-        assert(size <= sizeof(BufferElemTy));
-
+    bool push_impl(const Event &event) override {
         size_t n;
         size_t off = writer.write_off(n);
         if (n > 0) {
-            std::memcpy(&data[off], &event, size);
+            data[off] = static_cast<const BufferElemTy&>(event);
+            writer.write_finish(1);
             return true;
         }
 
