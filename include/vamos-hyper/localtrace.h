@@ -5,6 +5,7 @@
 #include <memory>
 
 #include <vamos-buffers/cpp/ring_buffer.h>
+#include <vamos-hyper/trace.h>
 
 namespace vamos {
 namespace hyper {
@@ -18,11 +19,7 @@ class LocalTrace : public Trace {
 
   std::unique_ptr<BufferElemTy[]> data;
 
-public:
-  LocalTrace(TracesPipeline &TP)
-      : Trace(TP), reader(rb), writer(rb),
-        data(new BufferElemTy[BufferCapacity]) {}
-
+protected:
   bool push_impl(const Event &event) override {
     size_t n;
     size_t off = writer.write_off(n);
@@ -35,6 +32,10 @@ public:
     return false;
   }
 
+public:
+  LocalTrace(TracesPipeline &TP)
+      : Trace(TP), reader(rb), writer(rb),
+        data(new BufferElemTy[BufferCapacity]) {}
   Event *get(size_t idx = 0) override {
     assert(idx == 0 && "Not implemented");
     size_t n;
@@ -48,10 +49,13 @@ public:
   void consume(size_t n) override { reader.consume(n); }
 
   // const Event *get(size_t idx = 0) const override;
-  bool has(uint64_t num = 1) override {
+  size_t unreadNum() override {
+    return reader.available();
+    /*
     size_t n;
     reader.read_off(n);
-    return n >= num;
+    return n;
+    */
   }
 };
 

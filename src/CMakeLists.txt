@@ -1,5 +1,5 @@
-add_library(vamos-hyper STATIC hyper.cpp trace.cpp pipeline.cpp)
-add_library(vamos-hyper-lib SHARED hyper.cpp trace.cpp pipeline.cpp)
+add_library(vamos-hyper STATIC hyper.cpp trace.cpp pipeline.cpp transformer.cpp)
+add_library(vamos-hyper-lib SHARED hyper.cpp trace.cpp pipeline.cpp transformer.cpp)
 
 target_include_directories(vamos-hyper PUBLIC ${vamos-buffers_INCLUDE_DIRS})
 target_include_directories(vamos-hyper-lib PUBLIC ${vamos-buffers_INCLUDE_DIRS})

@@ -2,6 +2,7 @@
 #define VAMOS_HYPER_PIPELINE_H
 
 #include <algorithm>
+#include <cstdint>
 #include <set>
 #include <vector>
 
@@ -9,11 +10,13 @@ namespace vamos {
 namespace hyper {
 
 class Trace;
+class Transformer;
 
 class TracesPipeline {
   std::set<Trace *> _updated;
   std::set<Trace *> _starting_traces;
   std::vector<Trace *> _traces;
+  std::set<Transformer *> _transformers;
 
   uint64_t last_new_trace_id{0};
 
@@ -32,11 +35,15 @@ public:
     _starting_traces.insert(t);
   }
 
+  void addTransformer(Transformer *T) { _transformers.insert(T); }
+
   /**
    * Register that a trace was updated with new events, so that we know
    * we should re-evaluate it in the next iteration.
    **/
   void updated(Trace *t) { _updated.insert(t); }
+
+  bool step();
 };
 
 } // namespace hyper

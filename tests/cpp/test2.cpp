@@ -40,6 +40,39 @@ struct Event_B : public TEvent {
   float x() const { return data.B.x; }
 };
 
+struct TTransformer : public TraceTransformer {
+  TTransformer(TracesPipeline &TP,
+               const std::initializer_list<Trace*>& in) : TraceTransformer(TP, in) {
+    assert(in.size() == 2);
+
+    // create outputs
+    _output_traces.reserve(4);
+    for (int i = 0; i < 4; ++i) {
+      auto *trace = new LocalTrace<TEvent>(TP);
+      _output_traces.push_back(trace);
+      outputs.push_back(&trace->createConsumer());
+    }
+  }
+
+  StepResult step() override {
+    assert(inputs.size() == 2);
+    StepResult result = StepResult::None;
+
+    for (int i = 0; i < 2; ++i) {
+      if (auto *e = inputs[i]->get()) {
+          _output_traces[2*i+0]->push(*e);
+          _output_traces[2*i+1]->push(*e);
+
+          inputs[i]->consume();
+          result = StepResult::Progress;
+      }
+    }
+    return result;
+  }
+
+  StepResult last_step() override { return StepResult::None; }
+};
+
 int main() {
   TracesPipeline TP;
 
@@ -51,6 +84,31 @@ int main() {
     trace->push(Event_B(x, x + 0.5));
   }
 
+  TraceTransformer *T = new TTransformer(TP, {trace, trace});
+
+  size_t n[4] = {0};
+  while (1) {
+    auto r = T->step();
+    if (r == StepResult::Progress) {
+        std::cout << "T made progress\n";
+    }
+    for (int i = 0; i < 4; ++i) {
+      if (T->hasOutputOn(i)) {
+        Event *e = T->acquireOutputOn(i);
+        assert(e && "No event event when hasOutputOn() == true");
+        std::cout << "out " << i << "[" << n[i] << "]: ";
+
+        if (e->kind() == (vms_kind)Kind::A) {
+          std::cout << static_cast<Event_A *>(e)->x() << "\n";
+        } else if (e->kind() == (vms_kind)Kind::B) {
+          std::cout << static_cast<Event_B *>(e)->x() << "\n";
+        }
+        ++n[i];
+        T->consumeOutputOn(i);
+      }
+    }
+  }
+  /*
   while (Event *e = trace->get()) {
     if (e->kind() == (vms_kind)Kind::A) {
       std::cout << static_cast<Event_A *>(e)->x() << "\n";
@@ -60,6 +118,7 @@ int main() {
     trace->consume();
   }
   assert(!trace->has() && "Trace still has some events");
+  */
 
   delete trace;
 }
