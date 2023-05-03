@@ -36,7 +36,8 @@ public:
   LocalTrace(TracesPipeline &TP)
       : Trace(TP), reader(rb), writer(rb),
         data(new BufferElemTy[BufferCapacity]) {}
-  Event *get(size_t idx = 0) override {
+
+  Event *get_impl(size_t idx = 0) override {
     assert(idx == 0 && "Not implemented");
     size_t n;
     size_t off = reader.read_off(n);
@@ -46,10 +47,10 @@ public:
     return nullptr;
   }
 
-  void consume(size_t n) override { reader.consume(n); }
+  void consume_impl(size_t n) override { reader.consume(n); }
 
   // const Event *get(size_t idx = 0) const override;
-  size_t unreadNum() override {
+  size_t unreadNum_impl() override {
     return reader.available();
     /*
     size_t n;
@@ -57,6 +58,7 @@ public:
     return n;
     */
   }
+
 };
 
 } // namespace hyper

@@ -29,9 +29,18 @@ public:
 };
 
 class TraceTransformer : public Transformer {
+
+  bool inputsEnded() {
+      for (auto *tc : inputs) {
+          if (!tc->ended())
+              return false;
+      }
+      return true;
+  }
+
 protected:
   std::vector<TraceConsumer *> inputs;
-  std::vector<Trace *> _output_traces;
+  std::vector<std::unique_ptr<Trace>> _output_traces;
   std::vector<TraceConsumer *> outputs;
 
 public:
@@ -52,6 +61,14 @@ public:
     }
   }
 
+  bool ended() {
+      for (auto &t : _output_traces) {
+          if (!t->ended())
+              return false;
+      }
+      return true;
+  }
+
   bool hasOutputOn(size_t idx);
   Event *acquireOutputOn(size_t idx);
   void consumeOutputOn(size_t idx);
@@ -59,8 +76,30 @@ public:
   size_t positionOn(size_t idx) const;
   size_t absolutePositionOn(size_t idx) const;
 
-  virtual StepResult step() = 0;
-  virtual StepResult last_step() = 0;
+  StepResult step() {
+      StepResult result = step_impl();
+
+      switch (result) {
+      case StepResult::Failed:
+      case StepResult::Succeeded:
+          for (auto &t : _output_traces) {
+              t->setTerminated();
+          }
+          break;
+      case StepResult::Progress:
+          if (inputsEnded()) {
+              for (auto &t : _output_traces) {
+                  t->setFinished();
+              }
+          }
+      default: break;
+      }
+
+      return result;
+  }
+
+  virtual StepResult step_impl() = 0;
+  virtual StepResult last_step_impl() { return StepResult::None; }
 };
 
 class HyperTraceTransformer {

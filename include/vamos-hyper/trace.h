@@ -40,6 +40,8 @@ public:
   TraceConsumer(TraceConsumer &&) = default;
   ~TraceConsumer();
 
+  bool ended();
+
   void destroy() {
     trace = nullptr;
 #ifndef NDEBUG
@@ -64,7 +66,7 @@ class Trace {
   TraceID _id;
 
   // the cache for the number of available events to be read
-  size_t _unread_num;
+  size_t _unread_num{0};
 
   // all consumers of this trace
   std::vector<std::unique_ptr<TraceConsumer>> _consumers;
@@ -82,14 +84,20 @@ class Trace {
     return nullptr;
   }
 
-  virtual Event *get(size_t idx = 0) = 0;
-  virtual void consume(size_t n = 1) = 0;
+  bool _finished{false};
+  bool _terminated{false};
 
 protected:
   TracesPipeline &TP;
 
   /* override this method to push a new event into the trace */
   virtual bool push_impl(const Event &event) = 0;
+  /* override this method to consume events from the trace */
+  virtual void consume_impl(size_t n = 1) = 0;
+  /* override this method to read an event from the trace */
+  virtual Event *get_impl(size_t idx = 0) = 0;
+  /* override this method to get the number of available events to read */
+  virtual size_t unreadNum_impl() = 0;
 
 public:
   Trace(TracesPipeline &TP);
@@ -109,7 +117,43 @@ public:
 
   size_t getID() const { return _id; }
 
-  virtual size_t unreadNum() = 0;
+  size_t unreadNum() {
+      _unread_num = unreadNum_impl();
+      return _unread_num;
+  }
+
+  // the trace has ended when it was set as `finished` (the last elem
+  // was put to the trace) and we have read all the
+  bool ended() {
+      if (_finished) {
+          return _terminated || (_unread_num == 0 && unreadNum() == 0);
+      }
+      return false;
+  }
+
+  // call this after pushing the last element to the trace
+  void setFinished() { _finished = true; }
+  void setTerminated() {
+      _finished = true;
+      _terminated = true;
+  }
+
+  Event *get(size_t idx = 0) {
+      if (_unread_num <= idx) {
+          _unread_num = unreadNum();
+      }
+
+      Event *e = get_impl(idx);
+      assert(e || _unread_num == 0);
+
+      return e;
+  }
+
+  void consume(size_t n = 1) {
+      assert(_unread_num >= n);
+      _unread_num -= n;
+      consume_impl(n);
+  }
 
   bool has(size_t num = 1) {
     // we cache the results of unreadNum to avoid

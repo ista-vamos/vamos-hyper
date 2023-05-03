@@ -49,12 +49,12 @@ struct TTransformer : public TraceTransformer {
     _output_traces.reserve(4);
     for (int i = 0; i < 4; ++i) {
       auto *trace = new LocalTrace<TEvent>(TP);
-      _output_traces.push_back(trace);
+      _output_traces.emplace_back(trace);
       outputs.push_back(&trace->createConsumer());
     }
   }
 
-  StepResult step() override {
+  StepResult step_impl() override {
     assert(inputs.size() == 2);
     StepResult result = StepResult::None;
 
@@ -70,28 +70,29 @@ struct TTransformer : public TraceTransformer {
     return result;
   }
 
-  StepResult last_step() override { return StepResult::None; }
+  StepResult last_step_impl() override { return StepResult::None; }
 };
 
 int main() {
   TracesPipeline TP;
 
   Trace *trace = new LocalTrace<TEvent>(TP);
+  Trace *trace2 = new LocalTrace<TEvent>(TP);
   for (int x = 1; x < 10; ++x) {
     trace->push(Event_A(x, x));
   }
-  for (int x = 10; x < 20; ++x) {
-    trace->push(Event_B(x, x + 0.5));
-  }
+  trace->setFinished();
 
-  TraceTransformer *T = new TTransformer(TP, {trace, trace});
+  for (int x = 10; x < 20; ++x) {
+    trace2->push(Event_B(x, x + 0.5));
+  }
+  trace2->setFinished();
+
+  TraceTransformer *T = new TTransformer(TP, {trace, trace2});
 
   size_t n[4] = {0};
-  while (1) {
-    auto r = T->step();
-    if (r == StepResult::Progress) {
-        std::cout << "T made progress\n";
-    }
+  while (!T->ended()) {
+    T->step();
     for (int i = 0; i < 4; ++i) {
       if (T->hasOutputOn(i)) {
         Event *e = T->acquireOutputOn(i);
@@ -120,5 +121,7 @@ int main() {
   assert(!trace->has() && "Trace still has some events");
   */
 
+  delete T;
   delete trace;
+  delete trace2;
 }
