@@ -34,7 +34,6 @@ class TraceConsumer {
 public:
   TraceConsumer(Trace *trace, size_t idx) : trace(trace), _idx(idx) {
     assert(_pos == 0);
-    assert(_idx < trace->_consumers());
     dump();
   }
 
@@ -46,7 +45,6 @@ public:
 #ifndef NDEBUG
     _pos = -1;
 #endif
-    assert(trace->_consumers[_idx].trace == nullptr);
   }
 
   bool has(uint64_t num = 1);
