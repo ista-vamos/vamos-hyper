@@ -40,19 +40,10 @@ struct Event_B : public TEvent {
   float x() const { return data.B.x; }
 };
 
-struct TTransformer : public TraceTransformer {
-  TTransformer(TracesPipeline &TP,
-               const std::initializer_list<Trace*>& in) : TraceTransformer(TP, in) {
-    assert(in.size() == 2);
+struct TTransformer : public TraceTransformerNM<2, 4, TEvent> {
 
-    // create outputs
-    _output_traces.reserve(4);
-    for (int i = 0; i < 4; ++i) {
-      auto *trace = new LocalTrace<TEvent>(TP);
-      _output_traces.emplace_back(trace);
-      outputs.push_back(&trace->createConsumer());
-    }
-  }
+  TTransformer(TracesPipeline &TP,
+               const std::initializer_list<Trace *>& in) : TraceTransformerNM(TP, in) {}
 
   StepResult step_impl() override {
     assert(inputs.size() == 2);
@@ -69,8 +60,6 @@ struct TTransformer : public TraceTransformer {
     }
     return result;
   }
-
-  StepResult last_step_impl() override { return StepResult::None; }
 };
 
 int main() {
