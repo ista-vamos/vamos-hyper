@@ -22,6 +22,7 @@ TraceTransformer::~TraceTransformer() {
     }
 }
 
+/*
 bool TraceTransformer::hasOutputOn(size_t idx) {
   assert(outputs.size() > idx);
   return outputs[idx]->has();
@@ -37,6 +38,7 @@ void TraceTransformer::consumeOutputOn(size_t idx) {
   assert(outputs.size() > idx);
   return outputs[idx]->consume();
 }
+*/
 
 size_t TraceTransformer::positionOn(size_t idx) const {
   assert(inputs.size() > idx);

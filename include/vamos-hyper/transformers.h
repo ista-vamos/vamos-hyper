@@ -70,6 +70,10 @@ public:
       return *outputs.back();
   }
 
+  TraceConsumer* getOutput(size_t idx) {
+      return _outputs_traces[idx]->createConsumer();
+  }
+
   bool ended() {
       for (auto &t : _output_traces) {
           if (!t->ended())
@@ -123,11 +127,13 @@ public:
 
         // FIXME: for this class, where the number of inputs and outputs
         // is fixed, we could use an array instead of vector
-        _output_traces.reserve(outNum);
-        outputs.reserve(outNum);
+        if (outNum > 0) {
+            _output_traces.reserve(outNum);
+            outputs.reserve(outNum);
 
-        for (size_t i = 0; i < outNum; ++i) {
-            addOutput<OutEventTy>();
+            for (size_t i = 0; i < outNum; ++i) {
+                addOutput<OutEventTy>();
+            }
         }
     }
 };

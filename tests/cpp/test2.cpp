@@ -62,9 +62,42 @@ struct TTransformer : public TraceTransformerNM<2, 4, TEvent> {
   }
 };
 
+struct OutTransformer : public TraceTransformerNM<4, 0, Void> {
+
+  TTransformer(TracesPipeline &TP,
+               const std::initializer_list<Trace *>& in) : TraceTransformerNM(TP, in) {}
+
+  StepResult step_impl() override {
+    assert(inputs.size() == 2);
+    StepResult result = StepResult::None;
+
+    size_t n[4] = {0};
+    for (int i = 0; i < 4; ++i) {
+      if (hasOutputOn(i)) {
+        Event *e = acquireOutputOn(i);
+        assert(e && "No event event when hasOutputOn() == true");
+        std::cout << "out " << i << "[" << n[i] << "]: ";
+
+        if (e->kind() == (vms_kind)Kind::A) {
+          std::cout << static_cast<Event_A *>(e)->x() << "\n";
+        } else if (e->kind() == (vms_kind)Kind::B) {
+          std::cout << static_cast<Event_B *>(e)->x() << "\n";
+        }
+        ++n[i];
+        consumeOutputOn(i);
+        result = StepResult::Progress;
+      }
+    }
+    return result;
+  }
+};
+
+
+
 int main() {
   TracesPipeline TP;
 
+  // dummy traces for testing
   Trace *trace = new LocalTrace<TEvent>(TP);
   Trace *trace2 = new LocalTrace<TEvent>(TP);
   for (int x = 1; x < 10; ++x) {
@@ -77,38 +110,12 @@ int main() {
   }
   trace2->setFinished();
 
+  // create two transformers in the pipeline and run it
   TraceTransformer *T = new TTransformer(TP, {trace, trace2});
-
-  size_t n[4] = {0};
-  while (!T->ended()) {
-    T->step();
-    for (int i = 0; i < 4; ++i) {
-      if (T->hasOutputOn(i)) {
-        Event *e = T->acquireOutputOn(i);
-        assert(e && "No event event when hasOutputOn() == true");
-        std::cout << "out " << i << "[" << n[i] << "]: ";
-
-        if (e->kind() == (vms_kind)Kind::A) {
-          std::cout << static_cast<Event_A *>(e)->x() << "\n";
-        } else if (e->kind() == (vms_kind)Kind::B) {
-          std::cout << static_cast<Event_B *>(e)->x() << "\n";
-        }
-        ++n[i];
-        T->consumeOutputOn(i);
-      }
-    }
-  }
-  /*
-  while (Event *e = trace->get()) {
-    if (e->kind() == (vms_kind)Kind::A) {
-      std::cout << static_cast<Event_A *>(e)->x() << "\n";
-    } else if (e->kind() == (vms_kind)Kind::B) {
-      std::cout << static_cast<Event_B *>(e)->x() << "\n";
-    }
-    trace->consume();
-  }
-  assert(!trace->has() && "Trace still has some events");
-  */
+  auto *Out = new OutTransformer(TP,
+                    {T->getOutput(0), T->getOutput(1),
+                     T->getOutput(2), T->getOutput(3));
+  TP.run();
 
   delete T;
   delete trace;
