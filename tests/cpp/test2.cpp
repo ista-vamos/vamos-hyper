@@ -42,39 +42,39 @@ struct Event_B : public TEvent {
 
 struct TTransformer : public TraceTransformerNM<2, 4, TEvent> {
 
-  TTransformer(TracesPipeline &TP,
-               const std::initializer_list<Trace *>& in) : TraceTransformerNM(TP, in) {}
+  TTransformer(TracesPipeline &TP, const std::initializer_list<Trace *> &in)
+      : TraceTransformerNM(TP, in) {}
 
   StepResult step_impl() override {
     assert(inputs.size() == 2);
-    StepResult result = StepResult::None;
+    StepResult result = StepResult::NoEvent;
 
     for (int i = 0; i < 2; ++i) {
       if (auto *e = inputs[i]->get()) {
-          _output_traces[2*i+0]->push(*e);
-          _output_traces[2*i+1]->push(*e);
+        outputs[2 * i + 0]->push(*e);
+        outputs[2 * i + 1]->push(*e);
 
-          inputs[i]->consume();
-          result = StepResult::Progress;
+        inputs[i]->consume();
+        result = StepResult::Progress;
       }
     }
     return result;
   }
 };
 
-struct OutTransformer : public TraceTransformerNM<4, 0, Void> {
+struct OutTransformer : public TraceTransformerNM<4, 0, void> {
 
-  TTransformer(TracesPipeline &TP,
-               const std::initializer_list<Trace *>& in) : TraceTransformerNM(TP, in) {}
+  OutTransformer(TracesPipeline &TP, const TraceTransformer &in)
+      : TraceTransformerNM(TP, in) {}
 
   StepResult step_impl() override {
     assert(inputs.size() == 2);
-    StepResult result = StepResult::None;
+    StepResult result = StepResult::NoEvent;
 
     size_t n[4] = {0};
     for (int i = 0; i < 4; ++i) {
-      if (hasOutputOn(i)) {
-        Event *e = acquireOutputOn(i);
+      if (input(i).has()) {
+        Event *e = input(i).get();
         assert(e && "No event event when hasOutputOn() == true");
         std::cout << "out " << i << "[" << n[i] << "]: ";
 
@@ -84,15 +84,13 @@ struct OutTransformer : public TraceTransformerNM<4, 0, Void> {
           std::cout << static_cast<Event_B *>(e)->x() << "\n";
         }
         ++n[i];
-        consumeOutputOn(i);
+        input(i).consume();
         result = StepResult::Progress;
       }
     }
     return result;
   }
 };
-
-
 
 int main() {
   TracesPipeline TP;
@@ -112,12 +110,12 @@ int main() {
 
   // create two transformers in the pipeline and run it
   TraceTransformer *T = new TTransformer(TP, {trace, trace2});
-  auto *Out = new OutTransformer(TP,
-                    {T->getOutput(0), T->getOutput(1),
-                     T->getOutput(2), T->getOutput(3));
+  auto *Out = new OutTransformer(TP, *T);
+
   TP.run();
 
   delete T;
+  delete Out;
   delete trace;
   delete trace2;
 }

@@ -6,8 +6,8 @@
 #include <vector>
 
 #include <vamos-buffers/cpp/event.h>
-#include <vamos-hyper/trace.h>
 #include <vamos-hyper/localtrace.h>
+#include <vamos-hyper/trace.h>
 
 namespace vamos {
 namespace hyper {
@@ -15,7 +15,14 @@ namespace hyper {
 class Trace;
 class TracesPipeline;
 
-enum class StepResult { None, Progress, Failed, Succeeded };
+enum class StepResult {
+  Waiting,   // waiting for an event
+  NoEvent,   // have no event and not waiting for one
+  Progress,  // produced an output
+  Failed,    // transformer failed, terminate it
+  Succeeded, // transformer succeeded, terminate it
+  Ended      // transformer just ended, terminate it
+};
 
 using TransformerID = uint64_t;
 
@@ -28,22 +35,35 @@ protected:
 
 public:
   Transformer(TracesPipeline &TP);
+
+  virtual StepResult step() = 0;
+  virtual StepResult last_step_impl() { return StepResult::NoEvent; }
+  virtual bool ended() = 0;
 };
 
 class TraceTransformer : public Transformer {
 
   bool inputsEnded() {
-      for (auto *tc : inputs) {
-          if (!tc->ended())
-              return false;
-      }
-      return true;
+    for (auto *tc : inputs) {
+      if (!tc->ended())
+        return false;
+    }
+    return true;
   }
 
 protected:
   std::vector<TraceConsumer *> inputs;
-  std::vector<std::unique_ptr<Trace>> _output_traces;
-  std::vector<TraceConsumer *> outputs;
+  std::vector<std::unique_ptr<Trace>> outputs;
+
+  TraceConsumer &input(size_t idx) {
+    assert(idx < inputs.size());
+    return *inputs[idx];
+  }
+
+  Trace &output(size_t idx) {
+    assert(idx < outputs.size());
+    return *outputs[idx];
+  }
 
 public:
   TraceTransformer(TracesPipeline &TP) : Transformer(TP) {}
@@ -51,35 +71,50 @@ public:
       : Transformer(TP) {
     setInputs(in);
   }
+  TraceTransformer(TracesPipeline &TP, const TraceTransformer &inT)
+      : Transformer(TP) {
+    setInputs(inT.outputs);
+  }
 
   virtual ~TraceTransformer();
 
   void setInputs(const std::initializer_list<Trace *> &in) {
-    inputs.clear();
+    assert(inputs.empty());
     for (auto *itrace : in) {
-      inputs.push_back(&itrace->createConsumer());
+      inputs.push_back(itrace->createConsumer());
     }
   }
 
-  template <typename EventTy>
-  TraceConsumer& addOutput() {
-      auto *trace = new LocalTrace<EventTy>(TP);
-      _output_traces.emplace_back(trace);
-      outputs.push_back(&trace->createConsumer());
-
-      return *outputs.back();
+  void setInputs(const std::vector<std::unique_ptr<Trace>> &in) {
+    assert(inputs.empty());
+    for (auto &itrace : in) {
+      inputs.push_back(itrace->createConsumer());
+    }
   }
 
-  TraceConsumer* getOutput(size_t idx) {
-      return _outputs_traces[idx]->createConsumer();
+  template <typename EventTy> void addOutput() {
+    auto *trace = new LocalTrace<EventTy>(TP);
+    outputs.emplace_back(trace);
   }
 
-  bool ended() {
-      for (auto &t : _output_traces) {
-          if (!t->ended())
-              return false;
-      }
-      return true;
+  template <typename EventTy> void addOutputs(size_t num) {
+    for (size_t n = 0; n < num; ++n) {
+      addOutput<EventTy>();
+    }
+  }
+
+  template <> void addOutputs<void>(size_t) {}
+
+  TraceConsumer *getOutput(size_t idx) {
+    return outputs[idx]->createConsumer();
+  }
+
+  bool ended() override {
+    for (auto &t : outputs) {
+      if (!t->ended())
+        return false;
+    }
+    return true;
   }
 
   bool hasOutputOn(size_t idx);
@@ -89,53 +124,63 @@ public:
   size_t positionOn(size_t idx) const;
   size_t absolutePositionOn(size_t idx) const;
 
-  StepResult step() {
-      StepResult result = step_impl();
+  StepResult step() override {
+    StepResult result = step_impl();
 
-      switch (result) {
-      case StepResult::Failed:
-      case StepResult::Succeeded:
-          for (auto &t : _output_traces) {
-              t->setTerminated();
-          }
-          break;
-      case StepResult::Progress:
-          if (inputsEnded()) {
-              for (auto &t : _output_traces) {
-                  t->setFinished();
-              }
-          }
-      default: break;
+    switch (result) {
+    case StepResult::Failed:
+    case StepResult::Succeeded:
+    case StepResult::Ended:
+      for (auto &t : outputs) {
+        t->setTerminated();
       }
+      break;
+    case StepResult::NoEvent:
+      if (inputsEnded()) {
+        for (auto &t : outputs) {
+          t->setFinished();
+        }
+        return StepResult::Ended;
+      }
+    case StepResult::Progress:
+    default:
+      break;
+    }
 
-      return result;
+    return result;
   }
 
   virtual StepResult step_impl() = 0;
-  virtual StepResult last_step_impl() { return StepResult::None; }
 };
 
 // TraceTransformer with N inputs and M outputs (fixed numbers)
 template <size_t inNum, size_t outNum, typename OutEventTy>
 class TraceTransformerNM : public TraceTransformer {
-public:
-    TraceTransformerNM(TracesPipeline &TP,
-                       const std::initializer_list<Trace*>& ins)
-        : TraceTransformer(TP, ins) {
-        assert(ins.size() == inNum);
-        assert(inputs.size() == inNum);
+  void createOutputs() {
+    // FIXME: for this class, where the number of inputs and outputs
+    // is fixed, we could use an array instead of vector
+    if (!std::is_same<OutEventTy, void>::value && outNum > 0) {
+      outputs.reserve(outNum);
+      outputs.reserve(outNum);
 
-        // FIXME: for this class, where the number of inputs and outputs
-        // is fixed, we could use an array instead of vector
-        if (outNum > 0) {
-            _output_traces.reserve(outNum);
-            outputs.reserve(outNum);
-
-            for (size_t i = 0; i < outNum; ++i) {
-                addOutput<OutEventTy>();
-            }
-        }
+      addOutputs<OutEventTy>(outNum);
     }
+  }
+
+public:
+  TraceTransformerNM(TracesPipeline &TP,
+                     const std::initializer_list<Trace *> &ins)
+      : TraceTransformer(TP, ins) {
+    assert(ins.size() == inNum);
+    assert(inputs.size() == inNum);
+    createOutputs();
+  }
+  TraceTransformerNM(TracesPipeline &TP, const TraceTransformer &ins)
+      : TraceTransformer(TP, ins) {
+    assert(ins.size() == inNum);
+    assert(inputs.size() == inNum);
+    createOutputs();
+  }
 };
 
 class HyperTraceTransformer {

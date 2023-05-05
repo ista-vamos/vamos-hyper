@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <map>
 #include <set>
 #include <vector>
 
@@ -14,26 +15,13 @@ class Transformer;
 
 class TracesPipeline {
   std::set<Trace *> _updated;
-  std::set<Trace *> _starting_traces;
-  std::vector<Trace *> _traces;
   std::set<Transformer *> _transformers;
+  // std::map<Trace *, std::vector<Transformer *>> _trace_to_trans;
 
   uint64_t last_new_trace_id{0};
 
 public:
   uint64_t newTraceID() { return ++last_new_trace_id; }
-
-  void addTrace(Trace *t) {
-    // don't expect this happen too often, so use vector
-    if (std::find(_traces.begin(), _traces.end(), t) == _traces.end()) {
-      _traces.push_back(t);
-    }
-  }
-
-  void addStart(Trace *t) {
-    addTrace(t);
-    _starting_traces.insert(t);
-  }
 
   void addTransformer(Transformer *T) { _transformers.insert(T); }
 
@@ -44,6 +32,7 @@ public:
   void updated(Trace *t) { _updated.insert(t); }
 
   bool step();
+  void run();
 };
 
 } // namespace hyper

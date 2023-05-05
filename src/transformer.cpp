@@ -12,33 +12,7 @@ Transformer::Transformer(TracesPipeline &TP)
   TP.addTransformer(this);
 }
 
-TraceTransformer::~TraceTransformer() {
-    for (auto *consumer : inputs) {
-      consumer->destroy();
-    }
-
-    for (auto *consumer : outputs) {
-      consumer->destroy();
-    }
-}
-
-/*
-bool TraceTransformer::hasOutputOn(size_t idx) {
-  assert(outputs.size() > idx);
-  return outputs[idx]->has();
-}
-
-Event *TraceTransformer::acquireOutputOn(size_t idx) {
-  assert(outputs.size() > idx);
-  assert(outputs[idx]->has() && "Acquiring output without having it");
-  return outputs[idx]->get();
-}
-
-void TraceTransformer::consumeOutputOn(size_t idx) {
-  assert(outputs.size() > idx);
-  return outputs[idx]->consume();
-}
-*/
+TraceTransformer::~TraceTransformer() {}
 
 size_t TraceTransformer::positionOn(size_t idx) const {
   assert(inputs.size() > idx);
@@ -49,7 +23,6 @@ size_t TraceTransformer::absolutePositionOn(size_t idx) const {
   assert(inputs.size() > idx);
   return inputs[idx]->absolute_pos();
 }
-
 
 } // namespace hyper
 } // namespace vamos

@@ -58,7 +58,6 @@ public:
     return n;
     */
   }
-
 };
 
 } // namespace hyper
