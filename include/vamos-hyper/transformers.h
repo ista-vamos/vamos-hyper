@@ -105,8 +105,8 @@ public:
 
   template <> void addOutputs<void>(size_t) {}
 
-  TraceConsumer *getOutput(size_t idx) {
-    return outputs[idx]->createConsumer();
+  Trace *getOutputTrace(size_t idx) {
+    return outputs[idx].get();
   }
 
   bool ended() override {
@@ -177,7 +177,7 @@ public:
   }
   TraceTransformerNM(TracesPipeline &TP, const TraceTransformer &ins)
       : TraceTransformer(TP, ins) {
-    assert(ins.size() == inNum);
+    //assert(ins.size() == inNum);
     assert(inputs.size() == inNum);
     createOutputs();
   }
