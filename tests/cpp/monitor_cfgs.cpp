@@ -2,6 +2,7 @@
 
 #include "od_cfgs.h"
 #include "od_cfgset.h"
+#include "od_workbag.h"
 
 std::ostream &operator<<(std::ostream &s, const PEStepResult r) {
     switch(r) {
@@ -13,7 +14,7 @@ std::ostream &operator<<(std::ostream &s, const PEStepResult r) {
 }
 
 
-void Cfg_1::queueNextConfigurations(std::vector<ConfigurationsSet>& workbag)
+void Cfg_1::queueNextConfigurations(Workbag& workbag)
 {
     /*
     std::cout << "Queueng next configurations:\n";
@@ -25,9 +26,9 @@ void Cfg_1::queueNextConfigurations(std::vector<ConfigurationsSet>& workbag)
 
     assert(mPE.accepted() && mPE.cond(trace(0), trace(1)));
 
-    ConfigurationsSet S;
+    ConfigurationsSet<3> S;
     S.add(Cfg_1(traces, positions));
     S.add(Cfg_2(traces, positions));
     S.add(Cfg_3(traces, positions));
-    workbag.push_back(S);
+    workbag.push(S);
 }

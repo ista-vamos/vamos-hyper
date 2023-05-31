@@ -7,12 +7,14 @@
 #include "od_cfgs.h"
 #include "od_cfgset.h"
 
+#include "od_workbag.h"
+
 template <typename WorkbagT, typename TracesT>
 static void add_new_cfgs(WorkbagT& workbag,
                          const TracesT &traces,
                          Trace<TraceEvent> *trace) {
   // set initially all elements to 'trace'
-  ConfigurationsSet S;
+  ConfigurationsSet<3> S;
   for (auto &t : traces) {
     /* reflexivity reduction */
       if (trace == t.get())
@@ -22,14 +24,14 @@ static void add_new_cfgs(WorkbagT& workbag,
     S.add(Cfg_1({t.get(), trace}));
     S.add(Cfg_2({t.get(), trace}));
     S.add(Cfg_3({t.get(), trace}));
-    workbag.push_back(S);
+    workbag.push(S);
 
     /* Symmetry reduction
     S.clear();
     S.add(Cfg_1({trace, t.get()}));
     S.add(Cfg_2({trace, t.get()}));
     S.add(Cfg_3({trace, t.get()}));
-    workbag.push_back(S);
+    workbag.push(S);
     */
   }
 }
@@ -43,7 +45,7 @@ enum Actions {
 
 // returns true to continue with next CFG
 template <typename CfgTy>
-Actions move_cfg(std::vector<ConfigurationsSet>& workbag, ConfigurationsSet::CfgTy &c) {
+Actions move_cfg(Workbag& workbag, ConfigurationsSet<3>::CfgTy &c) {
   auto &cfg = std::get<CfgTy>(c);
 
   bool no_progress = true;
@@ -120,9 +122,6 @@ void update_traces(Inputs& inputs, WorkbagT& workbag,
       }
       online_traces.swap(tmp);
     }
-
-
-
 }
 
 int monitor(Inputs& inputs) {
@@ -130,8 +129,8 @@ int monitor(Inputs& inputs) {
   std::vector<std::unique_ptr<Trace<TraceEvent>>> traces;
   std::vector<InputStream *> online_traces;
 
-  std::vector<ConfigurationsSet> workbag;
-  std::vector<ConfigurationsSet> new_workbag;
+  Workbag workbag;
+  Workbag new_workbag;
 
   while (true) {
     /////////////////////////////////
@@ -226,7 +225,7 @@ int monitor(Inputs& inputs) {
       for (auto& C : workbag) {
         if (C.invalid())
           continue;
-        new_workbag.push_back(C);
+        new_workbag.push(C);
       }
       workbag.swap(new_workbag);
       new_workbag.clear();

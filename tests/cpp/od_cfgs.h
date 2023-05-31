@@ -13,6 +13,8 @@ enum class PEStepResult { None = 1, Accept = 2, Reject = 3 };
 
 std::ostream &operator<<(std::ostream &s, const PEStepResult r);
 
+class Workbag;
+
 template <typename TraceT>
 bool match_eq(TraceT *t1, const MString& m1,
               TraceT *t2, const MString& m2) {
@@ -187,8 +189,6 @@ public:
   bool failed() const { return _failed; }
 };
 
-struct ConfigurationsSet;
-
 class Cfg_3 : public Configuration<Trace<TraceEvent>, 2> {
   mPE_3 mPE{};
 
@@ -197,7 +197,7 @@ public:
     return !mPE.accepted(idx) && trace(idx)->size() > positions[idx];
   }
 
-  void queueNextConfigurations(std::vector<ConfigurationsSet>&) {
+  void queueNextConfigurations(Workbag&) {
     /* no next configurations */
   }
 
@@ -259,7 +259,7 @@ public:
     return !mPE.accepted(idx) && trace(idx)->size() > positions[idx];
   }
 
-  void queueNextConfigurations(std::vector<ConfigurationsSet>&) {
+  void queueNextConfigurations(Workbag&) {
     /* no next configurations */
   }
 
@@ -321,7 +321,7 @@ public:
     return !mPE.accepted(idx) && trace(idx)->size() > positions[idx];
   }
 
-  void queueNextConfigurations(std::vector<ConfigurationsSet>&);
+  void queueNextConfigurations(Workbag&);
 
   PEStepResult step(size_t idx) {
     assert(canProceed(idx) && "Step on invalid PE");
