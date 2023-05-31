@@ -53,8 +53,9 @@ struct TraceEvent : Event {
 
   bool operator==(const TraceEvent& rhs) const {
     return kind() == rhs.kind() &&
-           data.Write.value == rhs.data.Write.value &&
-           data.Write.addr == rhs.data.Write.addr;
+           (kind() == Event::doneKind() ||
+            (data.Write.value == rhs.data.Write.value &&
+             data.Write.addr == rhs.data.Write.addr));
   }
 
   bool operator!=(const TraceEvent& rhs) const { return !operator==(rhs); }

@@ -7,6 +7,8 @@
 #include "od_events.h"
 #include "monitor_od.h"
 
+#define DEBUG
+
 enum class PEStepResult { None = 1, Accept = 2, Reject = 3 };
 
 std::ostream &operator<<(std::ostream &s, const PEStepResult r);
@@ -20,7 +22,9 @@ bool match_eq(TraceT *t1, const MString& m1,
 
     auto pos1 = m1[0].start;
     auto pos2 = m2[0].start;
+#ifndef NDEBUG
     const auto Bot = MString::Letter::BOT;
+#endif
     size_t m1i = 0;
     size_t m2i = 0;
 
@@ -142,6 +146,7 @@ struct mPE_2 : public MultiTracePrefixExpression<2> {
 
   template <typename TraceT>
   bool cond(TraceT *t1, TraceT *t2) const {
+    std::cout << "MATCH " << _exprs[0].M << ", " << _exprs[1].M << "\n";
     return !match_eq(t1, _exprs[0].M, t2, _exprs[1].M);
   }
 };
@@ -205,9 +210,11 @@ public:
     auto res = mPE.step(idx, ev, positions[idx]);
 
     assert(static_cast<const TraceEvent*>(ev)->data.InputL.addr != 0 || ev->is_done());
-   //std::cout << "Cfg_3[" << this << "](tau_" << idx << ") t"
-   //          << trace(idx)->id() <<"[" << positions[idx] << "]" << "@"
-   //          << *static_cast<const TraceEvent*>(ev) << ", " << positions[idx] << " => " << res << "\n";
+#ifdef DEBUG
+    std::cout << "Cfg_3[" << this << "](tau_" << idx << ") t"
+              << trace(idx)->id() <<"[" << positions[idx] << "]" << "@"
+              << *static_cast<const TraceEvent*>(ev) << ", " << positions[idx] << " => " << res << "\n";
+#endif
 
     ++positions[idx];
 
@@ -265,9 +272,11 @@ public:
     auto res = mPE.step(idx, ev, positions[idx]);
 
     assert(static_cast<const TraceEvent*>(ev)->data.InputL.addr != 0 || ev->is_done());
-   //std::cout << "Cfg_2[" << this << "](tau_" << idx << ") t"
-   //          << trace(idx)->id() <<"[" << positions[idx] << "]" << "@"
-   //          << *static_cast<const TraceEvent*>(ev) << ", " << positions[idx] << " => " << res << "\n";
+#ifdef DEBUG
+    std::cout << "Cfg_2[" << this << "](tau_" << idx << ") t"
+              << trace(idx)->id() <<"[" << positions[idx] << "]" << "@"
+              << *static_cast<const TraceEvent*>(ev) << ", " << positions[idx] << " => " << res << "\n";
+#endif
 
     ++positions[idx];
 
@@ -323,9 +332,11 @@ public:
     auto res = mPE.step(idx, ev, positions[idx]);
 
     assert(static_cast<const TraceEvent*>(ev)->data.InputL.addr != 0 || ev->is_done());
-   //std::cout << "Cfg_1[" << this << "](tau_" << idx << ") t"
-   //          << trace(idx)->id() <<"[" << positions[idx] << "]" << "@"
-   //          << *static_cast<const TraceEvent*>(ev) << ", " << positions[idx] << " => " << res << "\n";
+#ifdef DEBUG
+    std::cout << "Cfg_1[" << this << "](tau_" << idx << ") t"
+              << trace(idx)->id() <<"[" << positions[idx] << "]" << "@"
+              << *static_cast<const TraceEvent*>(ev) << ", " << positions[idx] << " => " << res << "\n";
+#endif
 
     ++positions[idx];
 
