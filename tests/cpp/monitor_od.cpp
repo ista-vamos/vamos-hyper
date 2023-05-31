@@ -105,6 +105,7 @@ void update_traces(Inputs& inputs, WorkbagT& workbag,
         if (stream->isDone()) {
           std::cout << "Stream " << stream->id() << " DONE\n";
           remove_online_traces.insert(stream);
+          trace->append(TraceEvent(Event::doneKind(), trace->size()));
           trace->setDone();
         }
       }
@@ -240,8 +241,8 @@ int monitor(Inputs& inputs) {
     }
   }
 
-ok:
   return 0;
+
 violated:
   return 1;
 }

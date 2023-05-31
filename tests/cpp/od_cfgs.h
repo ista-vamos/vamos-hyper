@@ -83,6 +83,7 @@ struct PE2 : public PrefixExpression {
 
     switch ((Kind)e->kind()) {
     case Kind::OutputL:
+    case Kind::End:
       state = 1;
       M.append(MString::Letter(pos, pos));
       return PEStepResult::Accept;
@@ -203,6 +204,7 @@ public:
     assert(ev && "No event");
     auto res = mPE.step(idx, ev, positions[idx]);
 
+    assert(static_cast<const TraceEvent*>(ev)->data.InputL.addr != 0 || ev->is_done());
     std::cout << "Cfg_3[" << this << "](tau_" << idx << ") t"
               << trace(idx)->id() <<"[" << positions[idx] << "]" << "@"
               << *static_cast<const TraceEvent*>(ev) << ", " << positions[idx] << " => " << res << "\n";
@@ -262,6 +264,7 @@ public:
     assert(ev && "No event");
     auto res = mPE.step(idx, ev, positions[idx]);
 
+    assert(static_cast<const TraceEvent*>(ev)->data.InputL.addr != 0 || ev->is_done());
     std::cout << "Cfg_2[" << this << "](tau_" << idx << ") t"
               << trace(idx)->id() <<"[" << positions[idx] << "]" << "@"
               << *static_cast<const TraceEvent*>(ev) << ", " << positions[idx] << " => " << res << "\n";
@@ -319,6 +322,7 @@ public:
     assert(ev && "No event");
     auto res = mPE.step(idx, ev, positions[idx]);
 
+    assert(static_cast<const TraceEvent*>(ev)->data.InputL.addr != 0 || ev->is_done());
     std::cout << "Cfg_1[" << this << "](tau_" << idx << ") t"
               << trace(idx)->id() <<"[" << positions[idx] << "]" << "@"
               << *static_cast<const TraceEvent*>(ev) << ", " << positions[idx] << " => " << res << "\n";

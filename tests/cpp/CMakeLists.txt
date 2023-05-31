@@ -37,3 +37,9 @@ target_include_directories(monitor_od-test4 PUBLIC ${vamos-buffers_INCLUDE_DIRS}
 target_link_libraries(monitor_od-test4 PRIVATE vamos-hyper vamos-buffers-event)
 add_test(NAME test-monitor_od-test4 COMMAND monitor_od-test4 true)
 
+add_executable(monitor_od-test5 ${OD_MONITOR_TEST} monitor_inputs-false2.cpp)
+target_include_directories(monitor_od-test5 PUBLIC ${vamos-buffers_INCLUDE_DIRS})
+target_link_libraries(monitor_od-test5 PRIVATE vamos-hyper vamos-buffers-event)
+add_test(NAME test-monitor_od-test5 COMMAND monitor_od-test5 false)
+
+

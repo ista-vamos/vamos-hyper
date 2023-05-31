@@ -5,7 +5,12 @@
 
 using vamos::Event;
 
-enum class Kind : vms_kind { InputL, InputH, OutputL, Write };
+enum class Kind : vms_kind {
+    End = Event::doneKind(),
+    InputL = Event::firstValidKind(),
+    InputH,
+    OutputL,
+    Write };
 
 inline const char *kindToStr(Kind k) {
   switch (k) {
@@ -17,6 +22,8 @@ inline const char *kindToStr(Kind k) {
     return "OutputL";
   case Kind::Write:
     return "Write";
+  case Kind::End:
+    return "END";
   }
 }
 
@@ -42,6 +49,7 @@ struct TraceEvent : Event {
 
   TraceEvent() = default;
   TraceEvent(Kind k, vms_eventid id) : Event((vms_kind)k, id) {}
+  TraceEvent(vms_kind k, vms_eventid id) : Event(k, id) {}
 
   bool operator==(const TraceEvent& rhs) const {
     return kind() == rhs.kind() &&
