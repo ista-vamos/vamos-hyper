@@ -7,7 +7,7 @@
 #include "od_events.h"
 #include "monitor_od.h"
 
-#define DEBUG
+//#define DEBUG
 
 enum class PEStepResult { None = 1, Accept = 2, Reject = 3 };
 
@@ -146,7 +146,6 @@ struct mPE_2 : public MultiTracePrefixExpression<2> {
 
   template <typename TraceT>
   bool cond(TraceT *t1, TraceT *t2) const {
-    std::cout << "MATCH " << _exprs[0].M << ", " << _exprs[1].M << "\n";
     return !match_eq(t1, _exprs[0].M, t2, _exprs[1].M);
   }
 };
