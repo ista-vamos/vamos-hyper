@@ -42,4 +42,14 @@ target_include_directories(monitor_od-test5 PUBLIC ${vamos-buffers_INCLUDE_DIRS}
 target_link_libraries(monitor_od-test5 PRIVATE vamos-hyper vamos-buffers-event)
 add_test(NAME test-monitor_od-test5 COMMAND monitor_od-test5 false)
 
+add_executable(monitor_od-test6 ${OD_MONITOR_TEST} monitor_inputs-true4.cpp)
+target_include_directories(monitor_od-test6 PUBLIC ${vamos-buffers_INCLUDE_DIRS})
+target_link_libraries(monitor_od-test6 PRIVATE vamos-hyper vamos-buffers-event)
+add_test(NAME test-monitor_od-test6 COMMAND monitor_od-test6 true)
+
+add_executable(monitor_od-test7 ${OD_MONITOR_TEST} monitor_inputs-false3.cpp)
+target_include_directories(monitor_od-test7 PUBLIC ${vamos-buffers_INCLUDE_DIRS})
+target_link_libraries(monitor_od-test7 PRIVATE vamos-hyper vamos-buffers-event)
+add_test(NAME test-monitor_od-test7 COMMAND monitor_od-test7 false)
+
 
