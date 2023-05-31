@@ -16,7 +16,7 @@ bool match_eq(TraceT *t1, const MString& m1,
               TraceT *t2, const MString& m2) {
     assert(!m1.empty() && !m2.empty());
 
-    std::cout << "match_eq: " << m1 << ", " << m2 << "\n";
+    //std::cout << "match_eq: " << m1 << ", " << m2 << "\n";
 
     auto pos1 = m1[0].start;
     auto pos2 = m2[0].start;
@@ -212,12 +212,12 @@ public:
     switch (res) {
     case PEStepResult::Accept:
       if (mPE.accepted()) {
-        std::cout << "mPE matched prefixes\n";
+        //std::cout << "mPE matched prefixes\n";
         if (mPE.cond(trace(0), trace(1))) {
-          std::cout << "Condition SAT!\n";
+          //std::cout << "Condition SAT!\n";
           return PEStepResult::Accept;
         } else {
-          std::cout << "Condition UNSAT!\n";
+          //std::cout << "Condition UNSAT!\n";
           _failed = true;
           return PEStepResult::Reject;
         }
@@ -271,12 +271,12 @@ public:
     switch (res) {
     case PEStepResult::Accept:
       if (mPE.accepted()) {
-        std::cout << "mPE matched prefixes\n";
+        //std::cout << "mPE matched prefixes\n";
         if (mPE.cond(trace(0), trace(1))) {
-          std::cout << "Condition SAT!\n";
+          //std::cout << "Condition SAT!\n";
           return PEStepResult::Accept;
         } else {
-          std::cout << "Condition UNSAT!\n";
+          //std::cout << "Condition UNSAT!\n";
           _failed = true;
           return PEStepResult::Reject;
         }
@@ -328,12 +328,12 @@ public:
     switch (res) {
     case PEStepResult::Accept:
       if (mPE.accepted()) {
-        std::cout << "mPE matched prefixes\n";
+        //std::cout << "mPE matched prefixes\n";
         if (mPE.cond(trace(0), trace(1))) {
-          std::cout << "Condition SAT!\n";
+          //std::cout << "Condition SAT!\n";
           return PEStepResult::Accept;
         } else {
-          std::cout << "Condition UNSAT!\n";
+          //std::cout << "Condition UNSAT!\n";
           _failed = true;
           return PEStepResult::Reject;
         }

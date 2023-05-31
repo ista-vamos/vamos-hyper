@@ -124,8 +124,7 @@ void update_traces(Inputs& inputs, WorkbagT& workbag,
 
 }
 
-int main() {
-  Inputs inputs;
+int monitor(Inputs& inputs) {
 
   std::vector<std::unique_ptr<Trace<TraceEvent>>> traces;
   std::vector<InputStream *> online_traces;
@@ -181,7 +180,7 @@ int main() {
             switch (move_cfg<Cfg_2>(new_workbag, c, C)) {
             case CFGSET_MATCHED:
                 std::cout << "\033[1;31mOBSERVATIONAL DETERMINISM VIOLATED!\033[0m\n";
-                goto end;
+                goto violated;
             case CFGSET_DONE:
                 C.setInvalid();
                 ++wbg_invalid;
@@ -223,7 +222,6 @@ int main() {
     }
 
     if (!new_workbag.empty() || wbg_invalid >= wbg_size/3) {
-      std::cout << "RECONSTRUCTING WORKBAG\n";
       for (auto& C : workbag) {
         if (C.invalid())
           continue;
@@ -241,5 +239,10 @@ int main() {
       break;
     }
   }
-end: (void)1;
+
+ok:
+  return 0;
+violated:
+  return 1;
 }
+

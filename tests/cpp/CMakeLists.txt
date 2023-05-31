@@ -8,7 +8,32 @@ add_executable(test3 test3.cpp)
 target_include_directories(test3 PUBLIC ${vamos-buffers_INCLUDE_DIRS})
 target_link_libraries(test3 PRIVATE vamos-hyper vamos-buffers-event)
 
-add_executable(monitor_od monitor_od.cpp monitor_inputs.cpp monitor_impl.cpp monitor_cfgs.cpp)
+set(OD_MONITOR monitor_main.cpp monitor_od.cpp monitor_impl.cpp monitor_cfgs.cpp)
+set(OD_MONITOR_TEST monitor_test.cpp monitor_od.cpp monitor_impl.cpp monitor_cfgs.cpp)
+
+add_executable(monitor_od ${OD_MONITOR} monitor_inputs.cpp)
 target_include_directories(monitor_od PUBLIC ${vamos-buffers_INCLUDE_DIRS})
 target_link_libraries(monitor_od PRIVATE vamos-hyper vamos-buffers-event)
+
+####
+# OD TESTS
+add_executable(monitor_od-test1 ${OD_MONITOR_TEST} monitor_inputs-true1.cpp)
+target_include_directories(monitor_od-test1 PUBLIC ${vamos-buffers_INCLUDE_DIRS})
+target_link_libraries(monitor_od-test1 PRIVATE vamos-hyper vamos-buffers-event)
+add_test(NAME test-monitor_od-test1 COMMAND monitor_od-test1 true)
+
+add_executable(monitor_od-test2 ${OD_MONITOR_TEST} monitor_inputs-true2.cpp)
+target_include_directories(monitor_od-test2 PUBLIC ${vamos-buffers_INCLUDE_DIRS})
+target_link_libraries(monitor_od-test2 PRIVATE vamos-hyper vamos-buffers-event)
+add_test(NAME test-monitor_od-test2 COMMAND monitor_od-test2 true)
+
+add_executable(monitor_od-test3 ${OD_MONITOR_TEST} monitor_inputs-false1.cpp)
+target_include_directories(monitor_od-test3 PUBLIC ${vamos-buffers_INCLUDE_DIRS})
+target_link_libraries(monitor_od-test3 PRIVATE vamos-hyper vamos-buffers-event)
+add_test(NAME test-monitor_od-test3 COMMAND monitor_od-test3 false)
+
+add_executable(monitor_od-test4 ${OD_MONITOR_TEST} monitor_inputs-true3.cpp)
+target_include_directories(monitor_od-test4 PUBLIC ${vamos-buffers_INCLUDE_DIRS})
+target_link_libraries(monitor_od-test4 PRIVATE vamos-hyper vamos-buffers-event)
+add_test(NAME test-monitor_od-test4 COMMAND monitor_od-test4 true)
 
