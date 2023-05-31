@@ -43,7 +43,7 @@ enum Actions {
 
 // returns true to continue with next CFG
 template <typename CfgTy>
-Actions move_cfg(std::vector<ConfigurationsSet>& workbag, ConfigurationsSet::CfgTy &c, ConfigurationsSet &C) {
+Actions move_cfg(std::vector<ConfigurationsSet>& workbag, ConfigurationsSet::CfgTy &c) {
   auto &cfg = std::get<CfgTy>(c);
 
   bool no_progress = true;
@@ -52,12 +52,12 @@ Actions move_cfg(std::vector<ConfigurationsSet>& workbag, ConfigurationsSet::Cfg
       no_progress = false;
       auto res = cfg.step(idx);
       if (res == PEStepResult::Accept) {
-          std::cout << "CFG " << &c << " from " << &C << " ACCEPTED\n";
+        // std::cout << "CFG " << &c << " from " << &C << " ACCEPTED\n";
         cfg.queueNextConfigurations(workbag);
         return CFGSET_MATCHED;
       }
       if (res == PEStepResult::Reject) {
-        std::cout << "CFG " << &c << " from " << &C << " REJECTED\n";
+        // std::cout << "CFG " << &c << " from " << &C << " REJECTED\n";
         return CFG_FAILED;
       }
     }
@@ -69,7 +69,7 @@ Actions move_cfg(std::vector<ConfigurationsSet>& workbag, ConfigurationsSet::Cfg
       if (!cfg.trace(idx)->done())
         return NONE;
     }
-    std::cout << "CFG discarded becase it has read traces entirely\n";
+    //std::cout << "CFG discarded becase it has read traces entirely\n";
     return CFGSET_DONE;
   }
 
@@ -82,7 +82,7 @@ void update_traces(Inputs& inputs, WorkbagT& workbag,
                    TracesT& traces, StreamsT& online_traces) {
     // get new input streams
     if (auto *stream = inputs.getNewInputStream()) {
-      std::cout << "NEW stream " << stream->id() << "\n";
+      // std::cout << "NEW stream " << stream->id() << "\n";
       auto *trace = new Trace<TraceEvent>(stream->id());
       traces.emplace_back(trace);
       stream->setTrace(trace);
@@ -103,7 +103,7 @@ void update_traces(Inputs& inputs, WorkbagT& workbag,
        //          << "\n";
 
         if (stream->isDone()) {
-          std::cout << "Stream " << stream->id() << " DONE\n";
+          // std::cout << "Stream " << stream->id() << " DONE\n";
           remove_online_traces.insert(stream);
           trace->append(TraceEvent(Event::doneKind(), trace->size()));
           trace->setDone();
@@ -160,7 +160,7 @@ int monitor(Inputs& inputs) {
                 continue;
             non_empty = true;
 
-            switch (move_cfg<Cfg_1>(new_workbag, c, C)) {
+            switch (move_cfg<Cfg_1>(new_workbag, c)) {
             case CFGSET_DONE:
             case CFGSET_MATCHED:
                 C.setInvalid();
@@ -178,7 +178,7 @@ int monitor(Inputs& inputs) {
                 continue;
             non_empty = true;
 
-            switch (move_cfg<Cfg_2>(new_workbag, c, C)) {
+            switch (move_cfg<Cfg_2>(new_workbag, c)) {
             case CFGSET_MATCHED:
                 std::cout << "\033[1;31mOBSERVATIONAL DETERMINISM VIOLATED!\033[0m\n";
                 goto violated;
@@ -197,7 +197,7 @@ int monitor(Inputs& inputs) {
                 continue;
             non_empty = true;
 
-            switch (move_cfg<Cfg_3>(new_workbag, c, C)) {
+            switch (move_cfg<Cfg_3>(new_workbag, c)) {
             case CFGSET_MATCHED:
                 std::cout << "OD holds for these traces\n";
             case CFGSET_DONE:

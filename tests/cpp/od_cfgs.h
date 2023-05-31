@@ -205,9 +205,9 @@ public:
     auto res = mPE.step(idx, ev, positions[idx]);
 
     assert(static_cast<const TraceEvent*>(ev)->data.InputL.addr != 0 || ev->is_done());
-    std::cout << "Cfg_3[" << this << "](tau_" << idx << ") t"
-              << trace(idx)->id() <<"[" << positions[idx] << "]" << "@"
-              << *static_cast<const TraceEvent*>(ev) << ", " << positions[idx] << " => " << res << "\n";
+   //std::cout << "Cfg_3[" << this << "](tau_" << idx << ") t"
+   //          << trace(idx)->id() <<"[" << positions[idx] << "]" << "@"
+   //          << *static_cast<const TraceEvent*>(ev) << ", " << positions[idx] << " => " << res << "\n";
 
     ++positions[idx];
 
@@ -265,9 +265,9 @@ public:
     auto res = mPE.step(idx, ev, positions[idx]);
 
     assert(static_cast<const TraceEvent*>(ev)->data.InputL.addr != 0 || ev->is_done());
-    std::cout << "Cfg_2[" << this << "](tau_" << idx << ") t"
-              << trace(idx)->id() <<"[" << positions[idx] << "]" << "@"
-              << *static_cast<const TraceEvent*>(ev) << ", " << positions[idx] << " => " << res << "\n";
+   //std::cout << "Cfg_2[" << this << "](tau_" << idx << ") t"
+   //          << trace(idx)->id() <<"[" << positions[idx] << "]" << "@"
+   //          << *static_cast<const TraceEvent*>(ev) << ", " << positions[idx] << " => " << res << "\n";
 
     ++positions[idx];
 
@@ -323,9 +323,9 @@ public:
     auto res = mPE.step(idx, ev, positions[idx]);
 
     assert(static_cast<const TraceEvent*>(ev)->data.InputL.addr != 0 || ev->is_done());
-    std::cout << "Cfg_1[" << this << "](tau_" << idx << ") t"
-              << trace(idx)->id() <<"[" << positions[idx] << "]" << "@"
-              << *static_cast<const TraceEvent*>(ev) << ", " << positions[idx] << " => " << res << "\n";
+   //std::cout << "Cfg_1[" << this << "](tau_" << idx << ") t"
+   //          << trace(idx)->id() <<"[" << positions[idx] << "]" << "@"
+   //          << *static_cast<const TraceEvent*>(ev) << ", " << positions[idx] << " => " << res << "\n";
 
     ++positions[idx];
 

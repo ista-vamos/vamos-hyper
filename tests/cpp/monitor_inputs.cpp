@@ -5,7 +5,7 @@
 
 int x;
 
-#define NUM_STREAMS 2
+#define NUM_STREAMS 300
 #define MAX_NUM_EVS 16
 const size_t lens[] = {10, 16};
 TraceEvent streams[][MAX_NUM_EVS] = {
@@ -83,9 +83,9 @@ InputStream *Inputs::getNewInputStream() {
   auto *stream = new InputStream(_streams.size());
   _streams.emplace_back(stream);
 
-  *reinterpret_cast<TraceEvent **>(&stream->data[0]) = streams[returned];
+  *reinterpret_cast<TraceEvent **>(&stream->data[0]) = streams[returned % 2];
   *reinterpret_cast<size_t *>(&stream->data[1]) = 0;
-  *reinterpret_cast<size_t *>(&stream->data[2]) = lens[returned];
+  *reinterpret_cast<size_t *>(&stream->data[2]) = lens[returned % 2];
 
   ++returned;
 
