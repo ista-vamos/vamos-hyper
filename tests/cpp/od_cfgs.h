@@ -189,17 +189,17 @@ public:
   bool failed() const { return _failed; }
 };
 
-class Cfg_3 : public Configuration<Trace<TraceEvent>, 2> {
-  mPE_3 mPE{};
+template <typename MpeTy>
+class CfgTemplate : public Configuration<Trace<TraceEvent>, 2> {
+protected:
+  MpeTy mPE{};
 
 public:
   bool canProceed(size_t idx) const {
     return !mPE.accepted(idx) && trace(idx)->size() > positions[idx];
   }
 
-  void queueNextConfigurations(Workbag&) {
-    /* no next configurations */
-  }
+  void queueNextConfigurations(Workbag&) { /* no next configurations */ }
 
   PEStepResult step(size_t idx) {
     assert(canProceed(idx) && "Step on invalid PE");
@@ -210,7 +210,7 @@ public:
 
     assert(static_cast<const TraceEvent*>(ev)->data.InputL.addr != 0 || ev->is_done());
 #ifdef DEBUG
-    std::cout << "Cfg_3[" << this << "](tau_" << idx << ") t"
+    std::cout << "Cfg[" << this << "](tau_" << idx << ") t"
               << trace(idx)->id() <<"[" << positions[idx] << "]" << "@"
               << *static_cast<const TraceEvent*>(ev) << ", " << positions[idx] << " => " << res << "\n";
 #endif
@@ -239,138 +239,42 @@ public:
     }
   }
 
-  Cfg_3(const std::array<Trace<TraceEvent> *, 2> &traces)
+  CfgTemplate(const std::array<Trace<TraceEvent> *, 2> &traces)
       : Configuration(traces) {}
 
-  Cfg_3(const std::array<Trace<TraceEvent> *, 2> &traces, const size_t pos[2])
+  CfgTemplate(const std::array<Trace<TraceEvent> *, 2> &traces, const size_t pos[2])
       : Configuration(traces) {
-    for (int i = 0; i < 2; ++i) {
-      positions[i] = pos[i];
-    }
+      positions[0] = pos[0];
+      positions[1] = pos[1];
   }
 };
 
-
-class Cfg_2 : public Configuration<Trace<TraceEvent>, 2> {
-  mPE_2 mPE{};
-
-public:
-  bool canProceed(size_t idx) const {
-    return !mPE.accepted(idx) && trace(idx)->size() > positions[idx];
-  }
-
-  void queueNextConfigurations(Workbag&) {
-    /* no next configurations */
-  }
-
-  PEStepResult step(size_t idx) {
-    assert(canProceed(idx) && "Step on invalid PE");
-
-    const Event *ev = trace(idx)->get(positions[idx]);
-    assert(ev && "No event");
-    auto res = mPE.step(idx, ev, positions[idx]);
-
-    assert(static_cast<const TraceEvent*>(ev)->data.InputL.addr != 0 || ev->is_done());
-#ifdef DEBUG
-    std::cout << "Cfg_2[" << this << "](tau_" << idx << ") t"
-              << trace(idx)->id() <<"[" << positions[idx] << "]" << "@"
-              << *static_cast<const TraceEvent*>(ev) << ", " << positions[idx] << " => " << res << "\n";
-#endif
-
-    ++positions[idx];
-
-    switch (res) {
-    case PEStepResult::Accept:
-      if (mPE.accepted()) {
-        //std::cout << "mPE matched prefixes\n";
-        if (mPE.cond(trace(0), trace(1))) {
-          //std::cout << "Condition SAT!\n";
-          return PEStepResult::Accept;
-        } else {
-          //std::cout << "Condition UNSAT!\n";
-          _failed = true;
-          return PEStepResult::Reject;
-        }
-      }
-      return PEStepResult::None;
-    case PEStepResult::Reject:
-      _failed = true;
-      // fall-through
-    default:
-      return res;
-    }
-  }
-
-  Cfg_2(const std::array<Trace<TraceEvent> *, 2> &traces)
-      : Configuration(traces) {}
-
-  Cfg_2(const std::array<Trace<TraceEvent> *, 2> &traces, const size_t pos[2])
-      : Configuration(traces) {
-    for (int i = 0; i < 2; ++i) {
-      positions[i] = pos[i];
-    }
-  }
-};
-
-
-class Cfg_1 : public Configuration<Trace<TraceEvent>, 2> {
-  mPE_1 mPE{};
-
-public:
-  bool canProceed(size_t idx) const {
-    return !mPE.accepted(idx) && trace(idx)->size() > positions[idx];
-  }
-
-  void queueNextConfigurations(Workbag&);
-
-  PEStepResult step(size_t idx) {
-    assert(canProceed(idx) && "Step on invalid PE");
-
-    const Event *ev = trace(idx)->get(positions[idx]);
-    assert(ev && "No event");
-    auto res = mPE.step(idx, ev, positions[idx]);
-
-    assert(static_cast<const TraceEvent*>(ev)->data.InputL.addr != 0 || ev->is_done());
-#ifdef DEBUG
-    std::cout << "Cfg_1[" << this << "](tau_" << idx << ") t"
-              << trace(idx)->id() <<"[" << positions[idx] << "]" << "@"
-              << *static_cast<const TraceEvent*>(ev) << ", " << positions[idx] << " => " << res << "\n";
-#endif
-
-    ++positions[idx];
-
-    switch (res) {
-    case PEStepResult::Accept:
-      if (mPE.accepted()) {
-        //std::cout << "mPE matched prefixes\n";
-        if (mPE.cond(trace(0), trace(1))) {
-          //std::cout << "Condition SAT!\n";
-          return PEStepResult::Accept;
-        } else {
-          //std::cout << "Condition UNSAT!\n";
-          _failed = true;
-          return PEStepResult::Reject;
-        }
-      }
-      return PEStepResult::None;
-    case PEStepResult::Reject:
-      _failed = true;
-      // fall-through
-    default:
-      return res;
-    }
-  }
-
+struct Cfg_1 : public CfgTemplate<mPE_1> {
   Cfg_1(const std::array<Trace<TraceEvent> *, 2> &traces)
-      : Configuration(traces) {}
+      : CfgTemplate(traces) {}
 
   Cfg_1(const std::array<Trace<TraceEvent> *, 2> &traces, const size_t pos[2])
-      : Configuration(traces) {
-    positions[0] = pos[0];
-    positions[1] = pos[1];
-  }
+      : CfgTemplate(traces, pos) {}
+
+  void queueNextConfigurations(Workbag&);
 };
 
+struct Cfg_2 : public CfgTemplate<mPE_2> {
+  Cfg_2(const std::array<Trace<TraceEvent> *, 2> &traces)
+      : CfgTemplate(traces) {}
+
+  Cfg_2(const std::array<Trace<TraceEvent> *, 2> &traces, const size_t pos[2])
+      : CfgTemplate(traces, pos) {}
+};
+
+
+struct Cfg_3 : public CfgTemplate<mPE_3> {
+  Cfg_3(const std::array<Trace<TraceEvent> *, 2> &traces)
+      : CfgTemplate(traces) {}
+
+  Cfg_3(const std::array<Trace<TraceEvent> *, 2> &traces, const size_t pos[2])
+      : CfgTemplate(traces, pos) {}
+};
 
 
 #endif
