@@ -4,13 +4,14 @@
 #include "od_events.h"
 
 void MString::append(const MString::Letter &l) {
-  if (_data.empty()) {
+  if (_size == 0) {
     assert(l.start != MString::Letter::BOT);
-    _data.push_back(l);
+    _data.arr[0] = l;
+    ++_size;
     return;
   }
 
-  auto &last = _data.back();
+  auto &last = back();
   if (last.end == MString::Letter::BOT) {
     assert(last.end != MString::Letter::BOT);
     assert(l.start != MString::Letter::BOT);
@@ -18,7 +19,12 @@ void MString::append(const MString::Letter &l) {
   } else {
     assert(last.start != MString::Letter::BOT);
     assert(l.start != MString::Letter::BOT);
-    _data.push_back(l);
+    ++_size;
+    if (_size <= ARRAY_SIZE) {
+      _data.arr[_size - 1] = l;
+    } else {
+      _data.vec.push_back(l);
+    }
   }
 }
 
@@ -44,7 +50,9 @@ std::ostream &operator<<(std::ostream &s, const TraceEvent &ev) {
 }
 
 std::ostream &operator<<(std::ostream &s, const MString &ev) {
-  for (auto& l : ev) {
+  auto sz = ev.size();
+  for (size_t i = 0; i < sz; ++i) {
+    const auto& l = ev[i];
     s << "(";
     if (l.start == MString::Letter::BOT) s << "⊥"; else s << l.start;
                                s << ", ";

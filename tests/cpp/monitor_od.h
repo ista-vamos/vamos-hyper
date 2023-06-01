@@ -5,6 +5,7 @@
 #include <memory>
 #include <set>
 #include <vector>
+#include <cstring>
 
 #include <vamos-buffers/cpp/event.h>
 
@@ -89,7 +90,10 @@ public:
 };
 
 class MString {
+  static const size_t ARRAY_SIZE = 1;
+
 public:
+
   struct Letter {
     static const size_t BOT = ~static_cast<size_t>(0);
 
@@ -104,22 +108,80 @@ public:
   };
 
   void append(const MString::Letter &l);
-  bool empty() const { return _data.empty(); }
-  size_t size() const { return _data.size(); }
+  bool empty() const { return _size == 0; }
+  size_t size() const { return _size; }
 
-  bool operator==(const MString &rhs) const { return _data == rhs._data; }
-  bool operator!=(const MString &rhs) const { return _data != rhs._data; }
+  bool operator==(const MString &rhs) const {
+    if (_size != rhs._size)
+      return false;
 
-  Letter &operator[](size_t idx) { return _data[idx]; }
-  Letter operator[](size_t idx) const { return _data[idx]; }
+    if (_size <= ARRAY_SIZE) {
+      for (size_t i = 0; i < _size; ++i) {
+          if (_data.arr[i] != rhs._data.arr[i]) {
+              return false;
+          }
+      }
+      return true;
+    }
 
+    return _data.vec == rhs._data.vec;
+  }
+  bool operator!=(const MString &rhs) const { return !operator==(rhs); }
+
+  Letter &operator[](size_t idx) {
+    if (_size <= ARRAY_SIZE) {
+      return _data.arr[idx];
+    }
+    return _data.vec[idx];
+  }
+  Letter operator[](size_t idx) const {
+    if (_size <= ARRAY_SIZE) {
+      return _data.arr[idx];
+    }
+    return _data.vec[idx];
+  }
+
+  /*
   auto begin() -> auto { return _data.begin(); }
   auto end() -> auto { return _data.end(); }
   auto begin() const -> auto { return _data.begin(); }
   auto end() const -> auto { return _data.end(); }
+  */
+
+  MString() : _size(0) {}
+  ~MString() {
+    if (_size > ARRAY_SIZE) {
+      // destroy the vector
+      _data.vec.~vector();
+    }
+  }
+  MString(const MString& rhs) : _size(rhs._size) {
+    if (_size <= ARRAY_SIZE) {
+      memcpy(_data.arr, rhs._data.arr, _size*sizeof(Letter));
+    } else {
+      _data.vec = rhs._data.vec;
+    }
+  }
+
+  Letter& back() {
+    if (_size <= ARRAY_SIZE) {
+      return _data.arr[_size - 1];
+    }
+    return _data.vec.back();
+  }
 
 private:
-  std::vector<Letter> _data;
+  size_t _size{0};
+
+  static_assert(ARRAY_SIZE*sizeof(Letter) <= sizeof(std::vector<Letter>), "Array is bigger than vec");
+  union DataTy {
+    Letter arr[ARRAY_SIZE];
+    std::vector<Letter> vec;
+
+    DataTy() {}
+    ~DataTy() {}
+  } _data;
+
 
   friend std::ostream &operator<<(std::ostream &s, const MString &ev);
 };
