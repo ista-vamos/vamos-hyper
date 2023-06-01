@@ -5,9 +5,9 @@
 
 int x;
 
-#define NUM_STREAMS 100
-#define MAX_NUM_EVS 21
-const size_t lens[] = {10, MAX_NUM_EVS};
+#define NUM_STREAMS 1000
+#define MAX_NUM_EVS 23
+const size_t lens[] = {12, MAX_NUM_EVS};
 TraceEvent streams[][MAX_NUM_EVS] = {
     {
         Event_InputL(1, &x, 1),
@@ -15,18 +15,22 @@ TraceEvent streams[][MAX_NUM_EVS] = {
         Event_Write(4, &x, 5),
         Event_Write(4, &x, 5),
         Event_Write(4, &x, 5),
-        Event_Write(4, &x, 5),
+        Event_InputL(1, &x, 1),
         Event_Write(4, &x, 5),
         Event_Write(4, &x, 5),
         Event_InputL(1, &x, 1),
+        Event_Write(4, &x, 5),
         Event_OutputL(1, &x, 1),
+        Event_Write(4, &x, 5),
     },
     {
         Event_Write(4, &x, 5),  Event_Write(4, &x, 5), Event_Write(4, &x, 5),
         Event_Write(4, &x, 5),  Event_Write(4, &x, 5), Event_Write(4, &x, 5),
         Event_InputL(1, &x, 1), Event_Write(4, &x, 5), Event_Write(4, &x, 5),
+        Event_InputL(1, &x, 1),
         Event_Write(4, &x, 5),  Event_Write(4, &x, 5), Event_Write(4, &x, 5),
         Event_Write(4, &x, 5),  Event_Write(4, &x, 5), Event_Write(4, &x, 5),
+        Event_InputL(1, &x, 1),
         Event_Write(4, &x, 5),  Event_Write(4, &x, 5), Event_Write(4, &x, 5),
         Event_Write(4, &x, 5),  Event_Write(4, &x, 5), Event_OutputL(1, &x, 1),
     },

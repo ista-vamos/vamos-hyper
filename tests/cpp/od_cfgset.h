@@ -45,7 +45,10 @@ template <size_t MAX_SIZE> struct ConfigurationsSet {
     _confs[_size++] = std::move(c);
   }
 
-  void clear() { _size = 0; }
+  void clear() {
+    _size = 0;
+    assert(!_invalid);
+  }
 
   void setInvalid() { _invalid = true; }
   bool invalid() const { return _invalid; }
