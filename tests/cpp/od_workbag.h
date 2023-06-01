@@ -3,6 +3,7 @@
 
 #include "od_cfgset.h"
 #include <vector>
+//#include <vamos-buffers/cpp/vector.h>
 
 class Workbag {
   std::vector<ConfigurationsSet<3>> _queue;
@@ -11,10 +12,10 @@ public:
   auto size() -> auto{ return _queue.size(); }
   auto empty() -> auto{ return _queue.empty(); }
   auto clear() -> auto{ return _queue.clear(); }
-  auto resize(size_t s) -> auto{ return _queue.resize(s); }
   auto swap(Workbag &rhs) -> auto{ return _queue.swap(rhs._queue); }
 
   auto push(ConfigurationsSet<3> &&C) -> auto{
+    //return _queue.push(std::move(C));
     return _queue.push_back(std::move(C));
   }
 

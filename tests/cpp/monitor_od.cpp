@@ -127,6 +127,8 @@ int monitor(Inputs &inputs) {
   Workbag workbag;
   Workbag new_workbag;
 
+  size_t max_wbg_size = 0;
+
   while (true) {
     /////////////////////////////////
     /// UPDATE TRACES (NEW TRACES AND NEW EVENTS)
@@ -140,7 +142,13 @@ int monitor(Inputs &inputs) {
 
     size_t wbg_size = workbag.size();
     size_t wbg_invalid = 0;
+#define STATS
+#ifdef STATS
+    max_wbg_size = std::max(wbg_size, max_wbg_size);
+#endif
+#ifdef DEBUG
     std::cout << "WORKBAG size: " << wbg_size << "\n";
+#endif
     for (auto &C : workbag) {
       if (C.invalid()) {
         ++wbg_invalid;
@@ -231,7 +239,7 @@ int monitor(Inputs &inputs) {
         new_workbag.push(std::move(C));
       }
       workbag.swap(new_workbag);
-      new_workbag.resize(0);
+      new_workbag.clear();
     }
 
     /////////////////////////////////
@@ -244,8 +252,15 @@ int monitor(Inputs &inputs) {
     }
   }
 
+#ifdef STATS
+    std::cout << "Max workbag size: " << max_wbg_size << "\n";
+#endif
+
   return 0;
 
 violated:
+#ifdef STATS
+  std::cout << "Max workbag size: " << max_wbg_size << "\n";
+#endif
   return 1;
 }

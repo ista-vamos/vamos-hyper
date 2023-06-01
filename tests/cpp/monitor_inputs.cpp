@@ -5,7 +5,7 @@
 
 int x;
 
-#define NUM_STREAMS 1000
+#define NUM_STREAMS 2000
 #define MAX_NUM_EVS 23
 const size_t lens[] = {12, MAX_NUM_EVS};
 TraceEvent streams[][MAX_NUM_EVS] = {

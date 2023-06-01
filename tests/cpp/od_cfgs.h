@@ -15,8 +15,8 @@ std::ostream &operator<<(std::ostream &s, const PEStepResult r);
 
 class Workbag;
 
-template <typename TraceT>
-bool match_eq(TraceT *t1, const MString &m1, TraceT *t2, const MString &m2) {
+template <typename TraceT, typename MStringT>
+bool match_eq(TraceT *t1, const MStringT &m1, TraceT *t2, const MStringT &m2) {
   assert(!m1.empty() && !m2.empty());
 
   // std::cout << "match_eq: " << m1 << ", " << m2 << "\n";

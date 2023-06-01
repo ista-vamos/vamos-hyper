@@ -98,12 +98,14 @@ public:
 
     size_t start;
     size_t end;
+    Letter() = default;
     Letter(size_t s, size_t e) : start(s), end(e) {}
 
     bool operator==(const Letter &rhs) const {
       return start == rhs.start && end == rhs.end;
     }
     bool operator!=(const Letter &rhs) const { return !(*this == rhs); }
+
   };
 
   void append(const MString::Letter &l);
@@ -209,6 +211,77 @@ private:
   friend std::ostream &operator<<(std::ostream &s, const MString &ev);
 };
 
+template <size_t ARRAY_SIZE>
+class FixedMString {
+public:
+  bool empty() const { return _size == 0; }
+  size_t size() const { return _size; }
+
+  void append(const MString::Letter &l) {
+    if (_size == 0) {
+      assert(l.start != MString::Letter::BOT);
+      _data[0] = l;
+      ++_size;
+      return;
+    }
+
+    auto &last = back();
+    if (last.end == MString::Letter::BOT) {
+      assert(last.end != MString::Letter::BOT);
+      assert(l.start != MString::Letter::BOT);
+      last.start = l.start;
+    } else {
+      assert(last.start != MString::Letter::BOT);
+      assert(l.start != MString::Letter::BOT);
+      assert(_size < ARRAY_SIZE && "OOB write");
+      _data[_size++] = l;
+    }
+  }
+
+  bool operator==(const FixedMString &rhs) const {
+    if (_size != rhs._size)
+      return false;
+
+    for (size_t i = 0; i < _size; ++i) {
+      if (_data[i] != rhs._data[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+  bool operator!=(const FixedMString &rhs) const { return !operator==(rhs); }
+
+  MString::Letter &operator[](size_t idx) {
+    return _data[idx];
+  }
+  MString::Letter operator[](size_t idx) const {
+    return _data[idx];
+  }
+
+  FixedMString() {}
+  FixedMString(const FixedMString &rhs) : _size(rhs._size) {
+    memcpy(_data, rhs._data, _size * sizeof(MString::Letter));
+  }
+
+  FixedMString &operator=(FixedMString &&rhs) {
+    _size = rhs._size;
+    memcpy(_data, rhs._data, _size * sizeof(MString::Letter));
+    return *this;
+  }
+
+  MString::Letter &back() {
+    assert(_size > 0);
+    return _data[_size - 1];
+  }
+
+private:
+  size_t _size{0};
+  MString::Letter _data[ARRAY_SIZE];
+
+  //friend std::ostream &operator<<(std::ostream &s, const MString &ev);
+};
+
+
 #define DBG
 #ifdef DBG
 #include <iostream>
@@ -217,7 +290,7 @@ std::ostream &operator<<(std::ostream &s, const MString &ev);
 
 struct PrefixExpression {
   size_t state{0};
-  MString M;
+  FixedMString<1> M;
 };
 
 template <size_t K> struct MultiTracePrefixExpression {
