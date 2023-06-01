@@ -45,9 +45,7 @@ enum Actions {
 
 // returns true to continue with next CFG
 template <typename CfgTy>
-Actions move_cfg(Workbag& workbag, ConfigurationsSet<3>::CfgTy &c) {
-  auto &cfg = std::get<CfgTy>(c);
-
+Actions move_cfg(Workbag& workbag, CfgTy &cfg) {
   bool no_progress = true;
   for (size_t idx = 0; idx < 2; ++idx) {
     if (cfg.canProceed(idx)) {
@@ -154,12 +152,13 @@ int monitor(Inputs& inputs) {
       bool non_empty = false;
       for (auto &c : C) {
         switch (c.index()) {
-        case 0: /* Cfg_1 */
-            if (std::get<Cfg_1>(c).failed())
+        case 0: /* Cfg_1 */ {
+            auto& cfg = c.get<Cfg_1>();
+            if (cfg.failed())
                 continue;
             non_empty = true;
 
-            switch (move_cfg<Cfg_1>(new_workbag, c)) {
+            switch (move_cfg<Cfg_1>(new_workbag, cfg)) {
             case CFGSET_DONE:
             case CFGSET_MATCHED:
                 C.setInvalid();
@@ -172,12 +171,14 @@ int monitor(Inputs& inputs) {
                 break;
           }
           break;
-        case 1: /* Cfg_2 */
-            if (std::get<Cfg_2>(c).failed())
+        }
+        case 1: /* Cfg_2 */ {
+            auto& cfg = c.get<Cfg_2>();
+            if (cfg.failed())
                 continue;
             non_empty = true;
 
-            switch (move_cfg<Cfg_2>(new_workbag, c)) {
+            switch (move_cfg<Cfg_2>(new_workbag, cfg)) {
             case CFGSET_MATCHED:
                 std::cout << "\033[1;31mOBSERVATIONAL DETERMINISM VIOLATED!\033[0m\n";
                 goto violated;
@@ -191,12 +192,14 @@ int monitor(Inputs& inputs) {
                 break;
           }
             break;
-          case 2: /* Cfg_3 */
-            if (std::get<Cfg_3>(c).failed())
+        }
+        case 2: /* Cfg_3 */ {
+            auto& cfg = c.get<Cfg_3>();
+            if (cfg.failed())
                 continue;
             non_empty = true;
 
-            switch (move_cfg<Cfg_3>(new_workbag, c)) {
+            switch (move_cfg<Cfg_3>(new_workbag, cfg)) {
             case CFGSET_MATCHED:
                 std::cout << "OD holds for these traces\n";
             case CFGSET_DONE:
@@ -209,6 +212,7 @@ int monitor(Inputs& inputs) {
                 break;
           }
             break;
+        }
         default:
           assert(false && "Unknown configuration");
           abort();
