@@ -127,7 +127,11 @@ int monitor(Inputs &inputs) {
   Workbag workbag;
   Workbag new_workbag;
 
+#define STATS
+#ifdef STATS
   size_t max_wbg_size = 0;
+  //size_t tuples_num = 0;
+#endif
 
   while (true) {
     /////////////////////////////////
@@ -142,7 +146,6 @@ int monitor(Inputs &inputs) {
 
     size_t wbg_size = workbag.size();
     size_t wbg_invalid = 0;
-#define STATS
 #ifdef STATS
     max_wbg_size = std::max(wbg_size, max_wbg_size);
 #endif
@@ -254,6 +257,7 @@ int monitor(Inputs &inputs) {
 
 #ifdef STATS
     std::cout << "Max workbag size: " << max_wbg_size << "\n";
+    std::cout << "Traces #: " << traces.size() << "\n";
 #endif
 
   return 0;
@@ -261,6 +265,7 @@ int monitor(Inputs &inputs) {
 violated:
 #ifdef STATS
   std::cout << "Max workbag size: " << max_wbg_size << "\n";
+  std::cout << "Traces #: " << traces.size() << "\n";
 #endif
   return 1;
 }
