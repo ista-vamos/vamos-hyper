@@ -1,8 +1,7 @@
 #ifndef OD_CFGSET_H
 #define OD_CFGSET_H
 
-#include "od_cfgs.h"
-#include <variant>
+#include "cfgs.h"
 
 struct AnyCfg {
   unsigned short _idx{3};

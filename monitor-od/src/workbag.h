@@ -1,7 +1,7 @@
 #ifndef OD_WORKBAG_H
 #define OD_WORKBAG_H
 
-#include "od_cfgset.h"
+#include "cfgset.h"
 #include <vector>
 //#include <vamos-buffers/cpp/vector.h>
 

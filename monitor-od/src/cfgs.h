@@ -4,8 +4,8 @@
 #include <cassert>
 #include <vamos-buffers/cpp/event.h>
 
-#include "monitor_od.h"
-#include "od_events.h"
+#include "monitor.h"
+#include "events.h"
 
 // #define DEBUG
 

@@ -1,7 +1,7 @@
 #include <cassert>
 
-#include "monitor_od.h"
-#include "od_events.h"
+#include "src/monitor.h"
+#include "src/events.h"
 
 int x;
 

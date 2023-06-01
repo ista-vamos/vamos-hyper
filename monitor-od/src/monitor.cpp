@@ -2,12 +2,11 @@
 #include <iostream>
 #include <variant>
 
-#include "monitor_od.h"
-#include "od_cfgs.h"
-#include "od_cfgset.h"
-#include "od_events.h"
-
-#include "od_workbag.h"
+#include "monitor.h"
+#include "cfgs.h"
+#include "cfgset.h"
+#include "events.h"
+#include "workbag.h"
 
 template <typename TracesT>
 static void add_new_cfgs(Workbag &workbag, const TracesT &traces,
