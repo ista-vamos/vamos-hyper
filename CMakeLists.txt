@@ -81,3 +81,5 @@ install(FILES
   "${CMAKE_CURRENT_BINARY_DIR}/cmake/vamos-hyper/vamos-hyper-config.cmake"
   "${CMAKE_CURRENT_BINARY_DIR}/cmake/vamos-hyper/vamos-hyper-version.cmake"
   DESTINATION lib/cmake/vamos-hyper)
+
+add_subdirectory(monitor-od)
