@@ -9,8 +9,8 @@
 
 #include "od_workbag.h"
 
-template <typename WorkbagT, typename TracesT>
-static void add_new_cfgs(WorkbagT &workbag, const TracesT &traces,
+template <typename TracesT>
+static void add_new_cfgs(Workbag &workbag, const TracesT &traces,
                          Trace<TraceEvent> *trace) {
   // set initially all elements to 'trace'
   ConfigurationsSet<3> S;
@@ -231,7 +231,7 @@ int monitor(Inputs &inputs) {
         new_workbag.push(std::move(C));
       }
       workbag.swap(new_workbag);
-      new_workbag.clear();
+      new_workbag.resize(0);
     }
 
     /////////////////////////////////

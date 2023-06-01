@@ -11,16 +11,16 @@ struct AnyCfg {
 
   auto index() const -> auto{ return cfg.index(); }
 
-  template <typename CfgTy> AnyCfg(const CfgTy &c) : cfg(c) {}
-
   AnyCfg(){};
   /*
+  template <typename CfgTy> AnyCfg(const CfgTy &c) : cfg(c) {}
   AnyCfg(const AnyCfg &rhs) = default;
   AnyCfg &operator=(const AnyCfg &rhs) {
     cfg = rhs.cfg;
     return *this;
   }
   */
+  template <typename CfgTy> AnyCfg(CfgTy &&c) : cfg(std::move(c)) {}
   AnyCfg(AnyCfg &&rhs) = default;
   AnyCfg &operator=(AnyCfg &&rhs) {
     cfg = std::move(rhs.cfg);
@@ -49,6 +49,10 @@ template <size_t MAX_SIZE> struct ConfigurationsSet {
     _size = 0;
     assert(!_invalid);
   }
+
+  ConfigurationsSet(const ConfigurationsSet &) = delete;
+  ConfigurationsSet(ConfigurationsSet &&) = default;
+  ConfigurationsSet() = default;
 
   void setInvalid() { _invalid = true; }
   bool invalid() const { return _invalid; }

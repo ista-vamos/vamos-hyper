@@ -24,15 +24,14 @@ TraceEvent streams[][MAX_NUM_EVS] = {
         Event_Write(4, &x, 5),
     },
     {
-        Event_Write(4, &x, 5),  Event_Write(4, &x, 5), Event_Write(4, &x, 5),
-        Event_Write(4, &x, 5),  Event_Write(4, &x, 5), Event_Write(4, &x, 5),
-        Event_InputL(1, &x, 1), Event_Write(4, &x, 5), Event_Write(4, &x, 5),
-        Event_InputL(1, &x, 1),
-        Event_Write(4, &x, 5),  Event_Write(4, &x, 5), Event_Write(4, &x, 5),
-        Event_Write(4, &x, 5),  Event_Write(4, &x, 5), Event_Write(4, &x, 5),
-        Event_InputL(1, &x, 1),
-        Event_Write(4, &x, 5),  Event_Write(4, &x, 5), Event_Write(4, &x, 5),
-        Event_Write(4, &x, 5),  Event_Write(4, &x, 5), Event_OutputL(1, &x, 1),
+        Event_Write(4, &x, 5),  Event_Write(4, &x, 5),   Event_Write(4, &x, 5),
+        Event_Write(4, &x, 5),  Event_Write(4, &x, 5),   Event_Write(4, &x, 5),
+        Event_InputL(1, &x, 1), Event_Write(4, &x, 5),   Event_Write(4, &x, 5),
+        Event_InputL(1, &x, 1), Event_Write(4, &x, 5),   Event_Write(4, &x, 5),
+        Event_Write(4, &x, 5),  Event_Write(4, &x, 5),   Event_Write(4, &x, 5),
+        Event_Write(4, &x, 5),  Event_InputL(1, &x, 1),  Event_Write(4, &x, 5),
+        Event_Write(4, &x, 5),  Event_Write(4, &x, 5),   Event_Write(4, &x, 5),
+        Event_Write(4, &x, 5),  Event_OutputL(1, &x, 1),
     },
 };
 
