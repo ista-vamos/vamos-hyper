@@ -162,7 +162,7 @@ public:
     }
   }
 
-  MString& operator=(const MString &rhs) {
+  MString &operator=(const MString &rhs) {
     _size = rhs._size;
     if (_size <= ARRAY_SIZE) {
       memcpy(_data.arr, rhs._data.arr, _size * sizeof(Letter));

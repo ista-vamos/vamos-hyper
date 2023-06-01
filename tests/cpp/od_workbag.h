@@ -23,9 +23,7 @@ public:
   auto end() const -> auto{ return _queue.end(); }
 
   Workbag() = default;
-  Workbag(size_t reserve) : Workbag() {
-    _queue.reserve(reserve);
-  };
+  Workbag(size_t reserve) : Workbag() { _queue.reserve(reserve); };
 };
 
 #endif // OD_WORKBAG_H
