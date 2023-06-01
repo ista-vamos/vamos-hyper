@@ -23,7 +23,7 @@ static void add_new_cfgs(WorkbagT &workbag, const TracesT &traces,
     S.add(Cfg_1({t.get(), trace}));
     S.add(Cfg_2({t.get(), trace}));
     S.add(Cfg_3({t.get(), trace}));
-    workbag.push(S);
+    workbag.push(std::move(S));
 
     /* Symmetry reduction
     S.clear();
@@ -228,7 +228,7 @@ int monitor(Inputs &inputs) {
       for (auto &C : workbag) {
         if (C.invalid())
           continue;
-        new_workbag.push(C);
+        new_workbag.push(std::move(C));
       }
       workbag.swap(new_workbag);
       new_workbag.clear();

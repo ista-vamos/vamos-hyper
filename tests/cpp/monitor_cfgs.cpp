@@ -34,5 +34,5 @@ void Cfg_1::queueNextConfigurations(Workbag &workbag) {
   S.add(Cfg_1(traces, positions));
   S.add(Cfg_2(traces, positions));
   S.add(Cfg_3(traces, positions));
-  workbag.push(S);
+  workbag.push(std::move(S));
 }

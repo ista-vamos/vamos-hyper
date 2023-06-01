@@ -14,13 +14,14 @@ struct AnyCfg {
   template <typename CfgTy> AnyCfg(const CfgTy &c) : cfg(c) {}
 
   AnyCfg(){};
-  AnyCfg(const AnyCfg &rhs) = default;
   /*
+  AnyCfg(const AnyCfg &rhs) = default;
   AnyCfg &operator=(const AnyCfg &rhs) {
     cfg = rhs.cfg;
     return *this;
   }
   */
+  AnyCfg(AnyCfg &&rhs) = default;
   AnyCfg &operator=(AnyCfg &&rhs) {
     cfg = std::move(rhs.cfg);
     return *this;
