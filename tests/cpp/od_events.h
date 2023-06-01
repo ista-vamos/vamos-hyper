@@ -6,11 +6,12 @@
 using vamos::Event;
 
 enum class Kind : vms_kind {
-    End = Event::doneKind(),
-    InputL = Event::firstValidKind(),
-    InputH,
-    OutputL,
-    Write };
+  End = Event::doneKind(),
+  InputL = Event::firstValidKind(),
+  InputH,
+  OutputL,
+  Write
+};
 
 inline const char *kindToStr(Kind k) {
   switch (k) {
@@ -51,14 +52,13 @@ struct TraceEvent : Event {
   TraceEvent(Kind k, vms_eventid id) : Event((vms_kind)k, id) {}
   TraceEvent(vms_kind k, vms_eventid id) : Event(k, id) {}
 
-  bool operator==(const TraceEvent& rhs) const {
-    return kind() == rhs.kind() &&
-           (kind() == Event::doneKind() ||
-            (data.Write.value == rhs.data.Write.value &&
-             data.Write.addr == rhs.data.Write.addr));
+  bool operator==(const TraceEvent &rhs) const {
+    return kind() == rhs.kind() && (kind() == Event::doneKind() ||
+                                    (data.Write.value == rhs.data.Write.value &&
+                                     data.Write.addr == rhs.data.Write.addr));
   }
 
-  bool operator!=(const TraceEvent& rhs) const { return !operator==(rhs); }
+  bool operator!=(const TraceEvent &rhs) const { return !operator==(rhs); }
 };
 
 struct Event_InputL : public TraceEvent {
@@ -96,7 +96,6 @@ struct Event_Write : public TraceEvent {
   auto addr() const { return data.Write.addr; }
   auto value() const { return data.Write.value; }
 };
-
 
 #define DBG
 #ifdef DBG

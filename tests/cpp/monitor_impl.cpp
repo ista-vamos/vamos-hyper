@@ -28,7 +28,6 @@ void MString::append(const MString::Letter &l) {
   }
 }
 
-
 #ifdef DBG
 #include <iomanip>
 #include <iostream>
@@ -52,12 +51,18 @@ std::ostream &operator<<(std::ostream &s, const TraceEvent &ev) {
 std::ostream &operator<<(std::ostream &s, const MString &ev) {
   auto sz = ev.size();
   for (size_t i = 0; i < sz; ++i) {
-    const auto& l = ev[i];
+    const auto &l = ev[i];
     s << "(";
-    if (l.start == MString::Letter::BOT) s << "⊥"; else s << l.start;
-                               s << ", ";
-    if (l.end == MString::Letter::BOT) s << "⊥"; else s << l.end;
-                               s << ")";
+    if (l.start == MString::Letter::BOT)
+      s << "⊥";
+    else
+      s << l.start;
+    s << ", ";
+    if (l.end == MString::Letter::BOT)
+      s << "⊥";
+    else
+      s << l.end;
+    s << ")";
   }
   return s;
 }

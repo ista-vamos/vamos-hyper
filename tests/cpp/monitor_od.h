@@ -2,10 +2,10 @@
 #define MONITOR_OD_H
 
 #include <array>
+#include <cstring>
 #include <memory>
 #include <set>
 #include <vector>
-#include <cstring>
 
 #include <vamos-buffers/cpp/event.h>
 
@@ -93,7 +93,6 @@ class MString {
   static const size_t ARRAY_SIZE = 1;
 
 public:
-
   struct Letter {
     static const size_t BOT = ~static_cast<size_t>(0);
 
@@ -117,9 +116,9 @@ public:
 
     if (_size <= ARRAY_SIZE) {
       for (size_t i = 0; i < _size; ++i) {
-          if (_data.arr[i] != rhs._data.arr[i]) {
-              return false;
-          }
+        if (_data.arr[i] != rhs._data.arr[i]) {
+          return false;
+        }
       }
       return true;
     }
@@ -155,15 +154,15 @@ public:
       _data.vec.~vector();
     }
   }
-  MString(const MString& rhs) : _size(rhs._size) {
+  MString(const MString &rhs) : _size(rhs._size) {
     if (_size <= ARRAY_SIZE) {
-      memcpy(_data.arr, rhs._data.arr, _size*sizeof(Letter));
+      memcpy(_data.arr, rhs._data.arr, _size * sizeof(Letter));
     } else {
       _data.vec = rhs._data.vec;
     }
   }
 
-  Letter& back() {
+  Letter &back() {
     if (_size <= ARRAY_SIZE) {
       return _data.arr[_size - 1];
     }
@@ -173,7 +172,8 @@ public:
 private:
   size_t _size{0};
 
-  static_assert(ARRAY_SIZE*sizeof(Letter) <= sizeof(std::vector<Letter>), "Array is bigger than vec");
+  static_assert(ARRAY_SIZE * sizeof(Letter) <= sizeof(std::vector<Letter>),
+                "Array is bigger than vec");
   union DataTy {
     Letter arr[ARRAY_SIZE];
     std::vector<Letter> vec;
@@ -181,7 +181,6 @@ private:
     DataTy() {}
     ~DataTy() {}
   } _data;
-
 
   friend std::ostream &operator<<(std::ostream &s, const MString &ev);
 };

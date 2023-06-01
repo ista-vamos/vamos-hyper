@@ -1,24 +1,20 @@
 #ifndef OD_CFGSET_H
 #define OD_CFGSET_H
 
-#include <variant>
 #include "od_cfgs.h"
+#include <variant>
 
 struct AnyCfg {
-    std::variant<Cfg_1, Cfg_2, Cfg_3> cfg;
+  std::variant<Cfg_1, Cfg_2, Cfg_3> cfg;
 
-    template <typename CfgTy>
-    CfgTy& get() { return std::get<CfgTy>(cfg); }
+  template <typename CfgTy> CfgTy &get() { return std::get<CfgTy>(cfg); }
 
-    auto index() const -> auto { return cfg.index(); }
+  auto index() const -> auto{ return cfg.index(); }
 
-    template <typename CfgTy>
-    AnyCfg(const CfgTy& c) : cfg(c) {}
+  template <typename CfgTy> AnyCfg(const CfgTy &c) : cfg(c) {}
 };
 
-
-template <size_t MAX_SIZE>
-struct ConfigurationsSet {
+template <size_t MAX_SIZE> struct ConfigurationsSet {
   std::vector<AnyCfg> _confs;
   bool _invalid{false};
 
@@ -31,7 +27,6 @@ struct ConfigurationsSet {
 
   auto begin() -> auto{ return _confs.begin(); }
   auto end() -> auto{ return _confs.end(); }
-
 };
 
 #endif // OD_CFGSET_H

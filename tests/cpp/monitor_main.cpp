@@ -3,7 +3,7 @@
 
 #include "monitor_od.h"
 
-int monitor(Inputs& inputs);
+int monitor(Inputs &inputs);
 
 int main() {
   Inputs inputs;

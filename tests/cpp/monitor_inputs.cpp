@@ -9,14 +9,11 @@ int x;
 #define MAX_NUM_EVS 2
 const size_t lens[] = {2, 2};
 TraceEvent streams[][MAX_NUM_EVS] = {
-                           {
-                               Event_InputL(1, &x, 1),
-                                 Event_Write(4, &x, 5)
-                           },
-                           {
-                               Event_InputL(1, &x, 1),
-                                 Event_Write(4, &x, 5),
-                           },
+    {Event_InputL(1, &x, 1), Event_Write(4, &x, 5)},
+    {
+        Event_InputL(1, &x, 1),
+        Event_Write(4, &x, 5),
+    },
 };
 
 bool InputStream::hasEvent() const {

@@ -3,22 +3,21 @@
 #include <variant>
 
 #include "monitor_od.h"
-#include "od_events.h"
 #include "od_cfgs.h"
 #include "od_cfgset.h"
+#include "od_events.h"
 
 #include "od_workbag.h"
 
 template <typename WorkbagT, typename TracesT>
-static void add_new_cfgs(WorkbagT& workbag,
-                         const TracesT &traces,
+static void add_new_cfgs(WorkbagT &workbag, const TracesT &traces,
                          Trace<TraceEvent> *trace) {
   // set initially all elements to 'trace'
   ConfigurationsSet<3> S;
   for (auto &t : traces) {
     /* reflexivity reduction */
-      if (trace == t.get())
-        continue;
+    if (trace == t.get())
+      continue;
 
     S.clear();
     S.add(Cfg_1({t.get(), trace}));
@@ -37,15 +36,14 @@ static void add_new_cfgs(WorkbagT& workbag,
 }
 
 enum Actions {
-    NONE,
-    CFGSET_MATCHED,
-    CFG_FAILED,
-    CFGSET_DONE,
+  NONE,
+  CFGSET_MATCHED,
+  CFG_FAILED,
+  CFGSET_DONE,
 };
 
 // returns true to continue with next CFG
-template <typename CfgTy>
-Actions move_cfg(Workbag& workbag, CfgTy &cfg) {
+template <typename CfgTy> Actions move_cfg(Workbag &workbag, CfgTy &cfg) {
   bool no_progress = true;
   for (size_t idx = 0; idx < 2; ++idx) {
     if (cfg.canProceed(idx)) {
@@ -69,60 +67,59 @@ Actions move_cfg(Workbag& workbag, CfgTy &cfg) {
       if (!cfg.trace(idx)->done())
         return NONE;
     }
-    //std::cout << "CFG discarded becase it has read traces entirely\n";
+    // std::cout << "CFG discarded becase it has read traces entirely\n";
     return CFGSET_DONE;
   }
 
   return NONE;
 }
 
-
 template <typename WorkbagT, typename TracesT, typename StreamsT>
-void update_traces(Inputs& inputs, WorkbagT& workbag,
-                   TracesT& traces, StreamsT& online_traces) {
-    // get new input streams
-    if (auto *stream = inputs.getNewInputStream()) {
-      // std::cout << "NEW stream " << stream->id() << "\n";
-      auto *trace = new Trace<TraceEvent>(stream->id());
-      traces.emplace_back(trace);
-      stream->setTrace(trace);
-      online_traces.push_back(stream);
+void update_traces(Inputs &inputs, WorkbagT &workbag, TracesT &traces,
+                   StreamsT &online_traces) {
+  // get new input streams
+  if (auto *stream = inputs.getNewInputStream()) {
+    // std::cout << "NEW stream " << stream->id() << "\n";
+    auto *trace = new Trace<TraceEvent>(stream->id());
+    traces.emplace_back(trace);
+    stream->setTrace(trace);
+    online_traces.push_back(stream);
 
-      add_new_cfgs(workbag, traces, trace);
+    add_new_cfgs(workbag, traces, trace);
+  }
+
+  // copy events from input streams to traces
+  std::set<InputStream *> remove_online_traces;
+  for (auto *stream : online_traces) {
+    if (stream->hasEvent()) {
+      auto *event = static_cast<TraceEvent *>(stream->getEvent());
+      auto *trace = static_cast<Trace<TraceEvent> *>(stream->trace());
+      trace->append(event);
+
+      // std::cout << "[Stream " << stream->id() << "] event: " << *event
+      //           << "\n";
+
+      if (stream->isDone()) {
+        // std::cout << "Stream " << stream->id() << " DONE\n";
+        remove_online_traces.insert(stream);
+        trace->append(TraceEvent(Event::doneKind(), trace->size()));
+        trace->setDone();
+      }
     }
-
-    // copy events from input streams to traces
-    std::set<InputStream *> remove_online_traces;
+  }
+  // remove finished traces
+  if (remove_online_traces.size() > 0) {
+    std::vector<InputStream *> tmp;
+    tmp.reserve(online_traces.size() - remove_online_traces.size());
     for (auto *stream : online_traces) {
-      if (stream->hasEvent()) {
-        auto *event = static_cast<TraceEvent *>(stream->getEvent());
-        auto *trace = static_cast<Trace<TraceEvent> *>(stream->trace());
-        trace->append(event);
-
-       //std::cout << "[Stream " << stream->id() << "] event: " << *event
-       //          << "\n";
-
-        if (stream->isDone()) {
-          // std::cout << "Stream " << stream->id() << " DONE\n";
-          remove_online_traces.insert(stream);
-          trace->append(TraceEvent(Event::doneKind(), trace->size()));
-          trace->setDone();
-        }
-      }
+      if (remove_online_traces.count(stream) == 0)
+        tmp.push_back(stream);
     }
-    // remove finished traces
-    if (remove_online_traces.size() > 0) {
-      std::vector<InputStream *> tmp;
-      tmp.reserve(online_traces.size() - remove_online_traces.size());
-      for (auto *stream : online_traces) {
-        if (remove_online_traces.count(stream) == 0)
-          tmp.push_back(stream);
-      }
-      online_traces.swap(tmp);
-    }
+    online_traces.swap(tmp);
+  }
 }
 
-int monitor(Inputs& inputs) {
+int monitor(Inputs &inputs) {
 
   std::vector<std::unique_ptr<Trace<TraceEvent>>> traces;
   std::vector<InputStream *> online_traces;
@@ -153,65 +150,66 @@ int monitor(Inputs& inputs) {
       for (auto &c : C) {
         switch (c.index()) {
         case 0: /* Cfg_1 */ {
-            auto& cfg = c.get<Cfg_1>();
-            if (cfg.failed())
-                continue;
-            non_empty = true;
+          auto &cfg = c.get<Cfg_1>();
+          if (cfg.failed())
+            continue;
+          non_empty = true;
 
-            switch (move_cfg<Cfg_1>(new_workbag, cfg)) {
-            case CFGSET_DONE:
-            case CFGSET_MATCHED:
-                C.setInvalid();
-                ++wbg_invalid;
-                goto outer_loop;
-                break;
-            case NONE:
-            case CFG_FAILED:
-                // remove c from C
-                break;
+          switch (move_cfg<Cfg_1>(new_workbag, cfg)) {
+          case CFGSET_DONE:
+          case CFGSET_MATCHED:
+            C.setInvalid();
+            ++wbg_invalid;
+            goto outer_loop;
+            break;
+          case NONE:
+          case CFG_FAILED:
+            // remove c from C
+            break;
           }
           break;
         }
         case 1: /* Cfg_2 */ {
-            auto& cfg = c.get<Cfg_2>();
-            if (cfg.failed())
-                continue;
-            non_empty = true;
+          auto &cfg = c.get<Cfg_2>();
+          if (cfg.failed())
+            continue;
+          non_empty = true;
 
-            switch (move_cfg<Cfg_2>(new_workbag, cfg)) {
-            case CFGSET_MATCHED:
-                std::cout << "\033[1;31mOBSERVATIONAL DETERMINISM VIOLATED!\033[0m\n";
-                goto violated;
-            case CFGSET_DONE:
-                C.setInvalid();
-                ++wbg_invalid;
-                goto outer_loop;
-            case NONE:
-            case CFG_FAILED:
-                // remove c from C
-                break;
-          }
+          switch (move_cfg<Cfg_2>(new_workbag, cfg)) {
+          case CFGSET_MATCHED:
+            std::cout
+                << "\033[1;31mOBSERVATIONAL DETERMINISM VIOLATED!\033[0m\n";
+            goto violated;
+          case CFGSET_DONE:
+            C.setInvalid();
+            ++wbg_invalid;
+            goto outer_loop;
+          case NONE:
+          case CFG_FAILED:
+            // remove c from C
             break;
+          }
+          break;
         }
         case 2: /* Cfg_3 */ {
-            auto& cfg = c.get<Cfg_3>();
-            if (cfg.failed())
-                continue;
-            non_empty = true;
+          auto &cfg = c.get<Cfg_3>();
+          if (cfg.failed())
+            continue;
+          non_empty = true;
 
-            switch (move_cfg<Cfg_3>(new_workbag, cfg)) {
-            case CFGSET_MATCHED:
-                std::cout << "OD holds for these traces\n";
-            case CFGSET_DONE:
-                C.setInvalid();
-                ++wbg_invalid;
-                goto outer_loop;
-            case NONE:
-            case CFG_FAILED:
-                // remove c from C
-                break;
-          }
+          switch (move_cfg<Cfg_3>(new_workbag, cfg)) {
+          case CFGSET_MATCHED:
+            std::cout << "OD holds for these traces\n";
+          case CFGSET_DONE:
+            C.setInvalid();
+            ++wbg_invalid;
+            goto outer_loop;
+          case NONE:
+          case CFG_FAILED:
+            // remove c from C
             break;
+          }
+          break;
         }
         default:
           assert(false && "Unknown configuration");
@@ -222,11 +220,12 @@ int monitor(Inputs& inputs) {
       if (!non_empty)
         C.setInvalid();
 
-    outer_loop: (void)1;
+    outer_loop:
+      (void)1;
     }
 
-    if (!new_workbag.empty() || wbg_invalid >= wbg_size/3) {
-      for (auto& C : workbag) {
+    if (!new_workbag.empty() || wbg_invalid >= wbg_size / 3) {
+      for (auto &C : workbag) {
         if (C.invalid())
           continue;
         new_workbag.push(C);
@@ -239,7 +238,8 @@ int monitor(Inputs& inputs) {
 
     if (workbag.empty() && inputs.done()) {
       std::cout << "No more traces to come, workbag empty\n";
-      std::cout << "\033[1;32mNO VIOLATION OF OBSERVATIONAL DETERMINISM FOUND!\033[0m\n";
+      std::cout << "\033[1;32mNO VIOLATION OF OBSERVATIONAL DETERMINISM "
+                   "FOUND!\033[0m\n";
       break;
     }
   }
@@ -249,4 +249,3 @@ int monitor(Inputs& inputs) {
 violated:
   return 1;
 }
-

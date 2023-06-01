@@ -7,26 +7,24 @@ int x;
 
 #define NUM_STREAMS 2
 #define NUM_EVS 6
-TraceEvent streams[][NUM_EVS] = {
-                           {
-                               Event_InputL(1,  &x, 1),
-                               Event_InputL(2,  &x, 2),
-                               Event_InputL(3,  &x, 3),
+TraceEvent streams[][NUM_EVS] = {{
+                                     Event_InputL(1, &x, 1),
+                                     Event_InputL(2, &x, 2),
+                                     Event_InputL(3, &x, 3),
 
-                               Event_OutputL(1, &x, 1),
-                               Event_OutputL(2, &x, 2),
-                               Event_OutputL(3, &x, 3),
-                           },
-                           {
-                               Event_InputL(1, &x, 1),
-                               Event_InputL(2, &x, 2),
-                               Event_InputL(3, &x, 3),
+                                     Event_OutputL(1, &x, 1),
+                                     Event_OutputL(2, &x, 2),
+                                     Event_OutputL(3, &x, 3),
+                                 },
+                                 {
+                                     Event_InputL(1, &x, 1),
+                                     Event_InputL(2, &x, 2),
+                                     Event_InputL(3, &x, 3),
 
-                               Event_OutputL(1, &x, 1),
-                               Event_OutputL(2, &x, 2),
-                               Event_OutputL(3, &x, 1),
-                           }
-};
+                                     Event_OutputL(1, &x, 1),
+                                     Event_OutputL(2, &x, 2),
+                                     Event_OutputL(3, &x, 1),
+                                 }};
 
 bool InputStream::hasEvent() const {
   const size_t &pos = reinterpret_cast<const size_t &>(data[1]);
