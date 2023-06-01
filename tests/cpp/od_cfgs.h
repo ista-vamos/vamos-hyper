@@ -177,6 +177,8 @@ protected:
   std::array<TraceTy *, K> traces;
 
 public:
+  Configuration() {}
+  //Configuration& operator=(const Configuration&) = default;
   Configuration(const std::array<TraceTy *, K> &tr) : traces(tr) {}
 
   TraceTy *trace(size_t idx) { return traces[idx]; }
@@ -238,6 +240,8 @@ public:
     }
   }
 
+  CfgTemplate() {}
+  //CfgTemplate& operator=(const CfgTemplate&) = default;
   CfgTemplate(const std::array<Trace<TraceEvent> *, 2> &traces)
       : Configuration(traces) {}
 
@@ -250,6 +254,8 @@ public:
 };
 
 struct Cfg_1 : public CfgTemplate<mPE_1> {
+  Cfg_1() {};
+  //Cfg_1& operator=(const Cfg_1&) = default;
   Cfg_1(const std::array<Trace<TraceEvent> *, 2> &traces)
       : CfgTemplate(traces) {}
 
@@ -260,6 +266,7 @@ struct Cfg_1 : public CfgTemplate<mPE_1> {
 };
 
 struct Cfg_2 : public CfgTemplate<mPE_2> {
+  Cfg_2() {};
   Cfg_2(const std::array<Trace<TraceEvent> *, 2> &traces)
       : CfgTemplate(traces) {}
 
@@ -268,6 +275,7 @@ struct Cfg_2 : public CfgTemplate<mPE_2> {
 };
 
 struct Cfg_3 : public CfgTemplate<mPE_3> {
+  Cfg_3() {};
   Cfg_3(const std::array<Trace<TraceEvent> *, 2> &traces)
       : CfgTemplate(traces) {}
 

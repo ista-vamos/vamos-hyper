@@ -162,6 +162,17 @@ public:
     }
   }
 
+  MString& operator=(const MString &rhs) {
+    _size = rhs._size;
+    if (_size <= ARRAY_SIZE) {
+      memcpy(_data.arr, rhs._data.arr, _size * sizeof(Letter));
+    } else {
+      _data.vec = rhs._data.vec;
+    }
+
+    return *this;
+  }
+
   Letter &back() {
     if (_size <= ARRAY_SIZE) {
       return _data.arr[_size - 1];
