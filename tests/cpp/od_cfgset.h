@@ -4,6 +4,7 @@
 #include <variant>
 #include "od_cfgs.h"
 
+template <size_t MAX_SIZE>
 struct ConfigurationsSet {
   using CfgTy = std::variant<Cfg_1, Cfg_2, Cfg_3>;
 
