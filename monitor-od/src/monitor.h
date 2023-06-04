@@ -84,6 +84,7 @@ class Inputs {
 
 public:
   Inputs();
+  Inputs(char *files[], size_t);
 
   InputStream *getNewInputStream();
   bool done() const;

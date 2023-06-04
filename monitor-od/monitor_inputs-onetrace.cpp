@@ -30,21 +30,19 @@ Event *InputStream::getEvent() {
   static Event_OutputL O(0, 0, 0);
   static Event_Write   W(0, 0, 0);
 
-  auto val = std::rand() % 100;
-  if (val <= 10) {
-    I = Event_InputL(pos, &x, 1);
-    return &I;
-  } else if (val <= 20) {
+  if (pos % 20 == 0) {
     O = Event_OutputL(pos, &x, 1);
     return &O;
+  } else if (pos % 10 == 0) {
+    I = Event_InputL(pos, &x, 1);
+    return &I;
   }
 
-  W = Event_Write(pos, &x, val);
+  W = Event_Write(pos, &x, pos);
   return &W;
 }
 
 Inputs::Inputs() {
-  std::srand(0xdeed);
   size_t &returned = reinterpret_cast<size_t &>(data[0]);
   returned = 0;
 }
