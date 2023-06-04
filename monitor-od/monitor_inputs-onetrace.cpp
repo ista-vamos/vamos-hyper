@@ -30,10 +30,10 @@ Event *InputStream::getEvent() {
   static Event_OutputL O(0, 0, 0);
   static Event_Write   W(0, 0, 0);
 
-  if (pos % 20 == 0) {
+  if (pos % OPOS == 0) {
     O = Event_OutputL(pos, &x, 1);
     return &O;
-  } else if (pos % 10 == 0) {
+  } else if (IPOS % 10 == 0) {
     I = Event_InputL(pos, &x, 1);
     return &I;
   }

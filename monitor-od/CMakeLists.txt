@@ -42,15 +42,48 @@ endforeach()
 
 foreach (NUM_STREAMS RANGE 100 500 100)
 foreach (STREAM_LEN RANGE 100 1000 100)
-add_executable(monitor_1t-${NUM_STREAMS}-${STREAM_LEN} ${MONITOR_MAIN} monitor_inputs-onetrace.cpp)
-target_include_directories(monitor_1t-${NUM_STREAMS}-${STREAM_LEN} PUBLIC ${vamos-buffers_INCLUDE_DIRS})
-target_link_libraries(monitor_1t-${NUM_STREAMS}-${STREAM_LEN} PRIVATE monitor-od)
-target_compile_definitions(monitor_1t-${NUM_STREAMS}-${STREAM_LEN}
+add_executable(monitor_1t_20_10-${NUM_STREAMS}-${STREAM_LEN} ${MONITOR_MAIN} monitor_inputs-onetrace.cpp)
+target_include_directories(monitor_1t_20_10-${NUM_STREAMS}-${STREAM_LEN} PUBLIC ${vamos-buffers_INCLUDE_DIRS})
+target_link_libraries(monitor_1t_20_10-${NUM_STREAMS}-${STREAM_LEN} PRIVATE monitor-od)
+target_compile_definitions(monitor_1t_20_10-${NUM_STREAMS}-${STREAM_LEN}
 			   PRIVATE NUM_STREAMS=${NUM_STREAMS}
 			   PRIVATE STREAM_LEN=${STREAM_LEN}
 			   PRIVATE REDUCT_SYMMETRY=1
 			   PRIVATE REDUCT_REFLEXIVITY=1
+			   PRIVATE OPOS=20
+			   PRIVATE IPOS=10
 			   )
 endforeach()
 endforeach()
 
+foreach (NUM_STREAMS RANGE 100 500 100)
+foreach (STREAM_LEN RANGE 100 1000 100)
+add_executable(monitor_1t_60_30-${NUM_STREAMS}-${STREAM_LEN} ${MONITOR_MAIN} monitor_inputs-onetrace.cpp)
+target_include_directories(monitor_1t_60_30-${NUM_STREAMS}-${STREAM_LEN} PUBLIC ${vamos-buffers_INCLUDE_DIRS})
+target_link_libraries(monitor_1t_60_30-${NUM_STREAMS}-${STREAM_LEN} PRIVATE monitor-od)
+target_compile_definitions(monitor_1t_60_30-${NUM_STREAMS}-${STREAM_LEN}
+			   PRIVATE NUM_STREAMS=${NUM_STREAMS}
+			   PRIVATE STREAM_LEN=${STREAM_LEN}
+			   PRIVATE REDUCT_SYMMETRY=1
+			   PRIVATE REDUCT_REFLEXIVITY=1
+			   PRIVATE OPOS=60
+			   PRIVATE IPOS=30
+			   )
+endforeach()
+endforeach()
+
+foreach (NUM_STREAMS RANGE 100 500 100)
+foreach (STREAM_LEN RANGE 100 1000 100)
+add_executable(monitor_1t_200_100-${NUM_STREAMS}-${STREAM_LEN} ${MONITOR_MAIN} monitor_inputs-onetrace.cpp)
+target_include_directories(monitor_1t_200_100-${NUM_STREAMS}-${STREAM_LEN} PUBLIC ${vamos-buffers_INCLUDE_DIRS})
+target_link_libraries(monitor_1t_200_100-${NUM_STREAMS}-${STREAM_LEN} PRIVATE monitor-od)
+target_compile_definitions(monitor_1t_200_100-${NUM_STREAMS}-${STREAM_LEN}
+			   PRIVATE NUM_STREAMS=${NUM_STREAMS}
+			   PRIVATE STREAM_LEN=${STREAM_LEN}
+			   PRIVATE REDUCT_SYMMETRY=1
+			   PRIVATE REDUCT_REFLEXIVITY=1
+			   PRIVATE OPOS=200
+			   PRIVATE IPOS=100
+			   )
+endforeach()
+endforeach()
