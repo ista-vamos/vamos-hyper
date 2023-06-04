@@ -8,15 +8,25 @@
 #include "events.h"
 #include "workbag.h"
 
+//#define OUTPUT
+
+//struct Stats {
+//  size_t max_wbg_size{0};
+//  size_t cfgs_num{0};
+//};
+
 template <typename TracesT>
 static void add_new_cfgs(Workbag &workbag, const TracesT &traces,
                          Trace<TraceEvent> *trace) {
   // set initially all elements to 'trace'
   ConfigurationsSet<3> S;
+
   for (auto &t : traces) {
     /* reflexivity reduction */
+#ifdef REDUCT_REFLEXIVITY
     if (trace == t.get())
       continue;
+#endif
 
     S.clear();
     S.add(Cfg_1({t.get(), trace}));
@@ -24,13 +34,13 @@ static void add_new_cfgs(Workbag &workbag, const TracesT &traces,
     S.add(Cfg_3({t.get(), trace}));
     workbag.push(std::move(S));
 
-    /* Symmetry reduction
+#ifdef REDUCT_SYMMETRY
     S.clear();
     S.add(Cfg_1({trace, t.get()}));
     S.add(Cfg_2({trace, t.get()}));
     S.add(Cfg_3({trace, t.get()}));
-    workbag.push(S);
-    */
+    workbag.push(std::move(S));
+#endif
   }
 }
 
@@ -126,8 +136,10 @@ int monitor(Inputs &inputs) {
   Workbag workbag;
   Workbag new_workbag;
 
+
 #define STATS
 #ifdef STATS
+  //Stats stats;
   size_t max_wbg_size = 0;
   //size_t tuples_num = 0;
 #endif
@@ -187,9 +199,12 @@ int monitor(Inputs &inputs) {
 
           switch (move_cfg<Cfg_2>(new_workbag, cfg)) {
           case CFGSET_MATCHED:
+#ifdef OUTPUT
             std::cout
                 << "\033[1;31mOBSERVATIONAL DETERMINISM VIOLATED!\033[0m\n";
-            goto violated;
+#endif
+            //goto violated;
+            // fall-through to discard this set of configs
           case CFGSET_DONE:
             C.setInvalid();
             ++wbg_invalid;
@@ -209,7 +224,9 @@ int monitor(Inputs &inputs) {
 
           switch (move_cfg<Cfg_3>(new_workbag, cfg)) {
           case CFGSET_MATCHED:
+#ifdef OUTPUT
             std::cout << "OD holds for these traces\n";
+#endif
           case CFGSET_DONE:
             C.setInvalid();
             ++wbg_invalid;
@@ -247,9 +264,11 @@ int monitor(Inputs &inputs) {
     /////////////////////////////////
 
     if (workbag.empty() && inputs.done()) {
+#ifdef OUTPUT
       std::cout << "No more traces to come, workbag empty\n";
       std::cout << "\033[1;32mNO VIOLATION OF OBSERVATIONAL DETERMINISM "
                    "FOUND!\033[0m\n";
+#endif
       break;
     }
   }

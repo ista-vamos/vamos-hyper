@@ -32,10 +32,10 @@ Event *InputStream::getEvent() {
 
   auto val = std::rand() % 100;
   if (val <= 10) {
-    I = Event_InputL(pos, &x, val % 2);
+    I = Event_InputL(pos, &x, 1);
     return &I;
   } else if (val <= 20) {
-    O = Event_OutputL(pos, &x, val % 2);
+    O = Event_OutputL(pos, &x, 1);
     return &O;
   }
 
@@ -44,12 +44,7 @@ Event *InputStream::getEvent() {
 }
 
 Inputs::Inputs() {
-#ifdef RAND_SEED
-  std::srand(RAND_SEED);
-#else
-  std::srand(std::time(nullptr));
-#endif
-
+  std::srand(0xdeed);
   size_t &returned = reinterpret_cast<size_t &>(data[0]);
   returned = 0;
 }
