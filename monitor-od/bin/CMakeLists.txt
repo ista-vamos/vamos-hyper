@@ -2,8 +2,8 @@
 
 set(MONITOR_MAIN ../src/main.cpp)
 
-foreach (NUM_STREAMS RANGE 500 2000 500)
-foreach (STREAM_LEN RANGE 500 10000 500)
+foreach (NUM_STREAMS RANGE 500 3000 500)
+foreach (STREAM_LEN 500 5000 10000 15000 20000)
 set(target monitor_rand-${NUM_STREAMS}-${STREAM_LEN})
 add_executable(${target} ${MONITOR_MAIN} ../monitor_inputs.cpp)
 target_include_directories(${target} PUBLIC ${vamos-buffers_INCLUDE_DIRS})
