@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 
 from subprocess import Popen, PIPE
-from os.path import dirname, realpath
-from os import listdir
+from os.path import dirname, realpath, basename
+from os import listdir, access, X_OK
 from sys import argv
 from multiprocessing import Pool
 
-bindir = dirname(realpath(__file__))
+bindir = f"{dirname(realpath(__file__))}/bin"
 
 def run_one(arg):
     binary, n, l = arg
-    cmd = ["/bin/time", f"{bindir}/{binary}-{n}-{l}"]
+    cmd = ["/bin/time", f"{bindir}/{binary}"]
+    #print(cmd)
 
     p = Popen(cmd, stderr=PIPE, stdout=PIPE)
     out, err = p.communicate()
@@ -45,19 +46,19 @@ def run_one(arg):
     #return (n, l, wbg_size, cpu_time, wall_time, mem)
 
 def get_params(binary):
-    binary += "-"
-    l = len(binary)
     for fl in listdir(bindir):
-        if fl.startswith(binary):
-            parts = fl[l:].split("-")
-            yield (int(parts[0]), int(parts[1]))
+        if fl.startswith(binary) and access(f"{bindir}/{fl}", X_OK):
+                # monitor_1t_150-500-100
+                parts = fl.split("-")
+                assert len(parts) == 3, parts
+                #print(basename(fl), int(parts[1]), int(parts[2]))
+                yield (basename(fl), int(parts[1]), int(parts[2]))
 
 binary = argv[1]
-args=((binary, n, l) for (n, l) in get_params(binary))
 proc_num=None
 if len(argv) == 3:
     proc_num=int(argv[2])
 
 with Pool(processes=proc_num) as pool:
-    result = pool.map(run_one, args)
+    result = pool.map(run_one, get_params(binary))
 
