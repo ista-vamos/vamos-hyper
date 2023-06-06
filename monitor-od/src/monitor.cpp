@@ -203,8 +203,10 @@ int monitor(Inputs &inputs) {
             std::cout
                 << "\033[1;31mOBSERVATIONAL DETERMINISM VIOLATED!\033[0m\n";
 #endif
-            //goto violated;
-            // fall-through to discard this set of configs
+#ifdef EXIT_ON_ERROR
+            goto violated;
+#endif
+          // fall-through to discard this set of configs
           case CFGSET_DONE:
             C.setInvalid();
             ++wbg_invalid;

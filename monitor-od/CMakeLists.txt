@@ -6,7 +6,7 @@ add_subdirectory(tests)
 #set(MONITOR_MAIN src/main.cpp)
 #add_executable(monitor ${MONITOR_MAIN} monitor_inputs-onetrace.cpp)
 #target_include_directories(monitor PUBLIC ${vamos-buffers_INCLUDE_DIRS})
-#target_link_libraries(monitor PRIVATE monitor-od)
+#target_link_libraries(monitor PRIVATE monitor-od-dbg)
 #target_compile_definitions(monitor
 #                           #PRIVATE RAND_SEED=0xdeed
 #                           PRIVATE NUM_STREAMS=2
