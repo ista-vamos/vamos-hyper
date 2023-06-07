@@ -19,7 +19,6 @@ Event *InputStream::getEvent() {
   assert(hasEvent() && "getEvent() when there is no event");
 
   std::ifstream *stream = reinterpret_cast<std::ifstream *>(data[0]);
-  std::string  date, time, pm;
   float lat, lng;
   static float llat, llng;
 
@@ -33,7 +32,7 @@ Event *InputStream::getEvent() {
   assert(sending <= 1);
   assert(stream->good());
 
-  if (!(*stream >> date >> time >> pm >> lat >> lng)) {
+  if (!(*stream >> lat >> lng)) {
       assert(sending <= 1);
       sending = 2;
       O = Event_OutputL(++pos, llat, llng);
@@ -64,14 +63,10 @@ InputStream *Inputs::getNewInputStream() {
   if (*files == nullptr)
     return nullptr;
 
-  std::cout << "New stream: " << *files <<"\n";
+  // std::cout << "New stream: " << *files <<"\n";
   auto *fstream = new std::ifstream(*files);
   assert(fstream->good());
   *reinterpret_cast<char ***>(&data[2]) = files + 1;
-
-  // skip the first line
-  std::string firstline;
-  std::getline(*fstream, firstline);
 
   auto *stream = new InputStream(_streams.size());
   _streams.emplace_back(stream);
