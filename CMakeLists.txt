@@ -29,7 +29,7 @@ if (NOT ${vamos_buffers_BUILD_TYPE} STREQUAL ${CMAKE_BUILD_TYPE})
                         "(vamos_buffers_IPO=${vamos_buffers_OPTION_ENABLE_IPO})")
 endif()
 
-OPTION(ENABLE_IPO "Enable interprocedural optimizations" ON)
+OPTION(ENABLE_IPO "Enable interprocedural optimizations" ${vamos_buffers_IPO})
 
 if (ENABLE_IPO)
 if (NOT ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
@@ -82,4 +82,7 @@ install(FILES
   "${CMAKE_CURRENT_BINARY_DIR}/cmake/vamos-hyper/vamos-hyper-version.cmake"
   DESTINATION lib/cmake/vamos-hyper)
 
-add_subdirectory(monitor-od)
+OPTION(ENABLE_MONITOR_OD "Build monitor for OD (manually written)" OFF)
+if (ENABLE_MONITOR_OD)
+        add_subdirectory(monitor-od)
+endif()
