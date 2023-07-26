@@ -1,5 +1,13 @@
 #target_compile_options(test2 PRIVATE -fsanitize=address,undefined)
 
+add_executable(monitor-rvhyper ../src/main_argv.cpp ../monitor_inputs_rvhyper.cpp)
+target_include_directories(monitor-rvhyper PUBLIC ${vamos-buffers_INCLUDE_DIRS})
+target_link_libraries(monitor-rvhyper PRIVATE monitor-od-dbg)
+target_compile_definitions(monitor-rvhyper
+			   PRIVATE REDUCT_SYMMETRY=1
+			   PRIVATE REDUCT_REFLEXIVITY=1
+			   )
+
 set(MONITOR_MAIN ../src/main.cpp)
 
 foreach (NUM_STREAMS RANGE 500 3000 500)

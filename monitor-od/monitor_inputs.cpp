@@ -26,20 +26,20 @@ Event *InputStream::getEvent() {
 
   ++pos;
 
-  static Event_InputL  I(0, 0, 0);
-  static Event_OutputL O(0, 0, 0);
-  static Event_Write   W(0, 0, 0);
+  static Event_InputL  I(0, 0);
+  static Event_OutputL O(0, 0);
+  static Event_Dummy   W(0, 0);
 
   auto val = std::rand() % 100;
   if (val <= 10) {
-    I = Event_InputL(pos, &x, val % 2);
+    I = Event_InputL(pos, val % 2);
     return &I;
   } else if (val <= 20) {
-    O = Event_OutputL(pos, &x, val % 2);
+    O = Event_OutputL(pos, val % 2);
     return &O;
   }
 
-  W = Event_Write(pos, &x, val);
+  W = Event_Dummy(pos, val);
   return &W;
 }
 

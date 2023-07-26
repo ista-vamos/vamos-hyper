@@ -8,21 +8,18 @@ using vamos::Event;
 enum class Kind : vms_kind {
   End = Event::doneKind(),
   InputL = Event::firstValidKind(),
-  InputH,
   OutputL,
-  Write
+  Dummy
 };
 
 inline const char *kindToStr(Kind k) {
   switch (k) {
   case Kind::InputL:
     return "InputL";
-  case Kind::InputH:
-    return "InputH";
   case Kind::OutputL:
     return "OutputL";
-  case Kind::Write:
-    return "Write";
+  case Kind::Dummy:
+    return "Dummy";
   case Kind::End:
     return "END";
   }
@@ -31,21 +28,14 @@ inline const char *kindToStr(Kind k) {
 struct TraceEvent : Event {
   union {
     struct {
-      void *addr;
       uint64_t value;
     } InputL;
     struct {
-      void *addr;
-      uint64_t value;
-    } InputH;
-    struct {
-      void *addr;
       uint64_t value;
     } OutputL;
     struct {
-      void *addr;
       uint64_t value;
-    } Write;
+    } Dummy;
   } data;
 
   TraceEvent() = default;
@@ -54,8 +44,7 @@ struct TraceEvent : Event {
 
   bool operator==(const TraceEvent &rhs) const {
     return kind() == rhs.kind() && (kind() == Event::doneKind() ||
-                                    (data.Write.value == rhs.data.Write.value &&
-                                     data.Write.addr == rhs.data.Write.addr));
+                                    (data.Dummy.value == rhs.data.Dummy.value));
   }
 
   bool operator!=(const TraceEvent &rhs) const { return !operator==(rhs); }
@@ -63,38 +52,32 @@ struct TraceEvent : Event {
 
 struct Event_InputL : public TraceEvent {
   Event_InputL() = default;
-  Event_InputL(vms_eventid id, void *addr, uint64_t value)
+  Event_InputL(vms_eventid id, uint64_t value)
       : TraceEvent(Kind::InputL, id) {
-    data.InputL.addr = addr;
     data.InputL.value = value;
   }
 
-  auto addr() const { return data.InputL.addr; }
   auto value() const { return data.InputL.value; }
 };
 
 struct Event_OutputL : public TraceEvent {
   Event_OutputL() = default;
-  Event_OutputL(vms_eventid id, void *addr, uint64_t value)
+  Event_OutputL(vms_eventid id, uint64_t value)
       : TraceEvent(Kind::OutputL, id) {
-    data.OutputL.addr = addr;
     data.OutputL.value = value;
   }
 
-  auto addr() const { return data.OutputL.addr; }
   auto value() const { return data.OutputL.value; }
 };
 
-struct Event_Write : public TraceEvent {
-  Event_Write() = default;
-  Event_Write(vms_eventid id, void *addr, uint64_t value)
-      : TraceEvent(Kind::Write, id) {
-    data.Write.addr = addr;
-    data.Write.value = value;
+struct Event_Dummy : public TraceEvent {
+  Event_Dummy() = default;
+  Event_Dummy(vms_eventid id, uint64_t value)
+      : TraceEvent(Kind::Dummy, id) {
+    data.Dummy.value = value;
   }
 
-  auto addr() const { return data.Write.addr; }
-  auto value() const { return data.Write.value; }
+  auto value() const { return data.Dummy.value; }
 };
 
 #define DBG

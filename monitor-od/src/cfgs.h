@@ -207,8 +207,6 @@ public:
     assert(ev && "No event");
     auto res = mPE.step(idx, ev, positions[idx]);
 
-    assert(static_cast<const TraceEvent *>(ev)->data.InputL.addr != 0 ||
-           ev->is_done());
 #ifdef DEBUG
     std::cout << "Cfg[" << this << "](tau_" << idx << ") t" << trace(idx)->id()
               << "[" << positions[idx] << "]"

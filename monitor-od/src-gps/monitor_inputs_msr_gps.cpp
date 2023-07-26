@@ -1,8 +1,8 @@
 #include <cassert>
 #include <fstream>
 
-#include "src-gps/monitor.h"
-#include "src-gps/events.h"
+#include "monitor.h"
+#include "events.h"
 
 int x;
 

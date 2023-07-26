@@ -42,7 +42,7 @@ std::ostream &operator<<(std::ostream &s, const TraceEvent &ev) {
     << std::setw(2) << std::right << ev.id()
     << color_reset
     // all data are the same, it doesn't matter how we access them
-    << ", addr=" << ev.data.InputL.addr << ", value=" << ev.data.InputL.value
+    << ", value=" << ev.data.InputL.value
     << ")";
 
   return s;

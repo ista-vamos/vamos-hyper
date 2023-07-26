@@ -5,8 +5,6 @@
 #include "src/monitor.h"
 #include "src/events.h"
 
-int x;
-
 bool InputStream::hasEvent() const {
   const size_t &pos = reinterpret_cast<const size_t &>(data[1]);
   const size_t len = reinterpret_cast<const size_t>(data[2]);
@@ -26,19 +24,19 @@ Event *InputStream::getEvent() {
 
   ++pos;
 
-  static Event_InputL  I(0, 0, 0);
-  static Event_OutputL O(0, 0, 0);
-  static Event_Write   W(0, 0, 0);
+  static Event_InputL  I(0, 0);
+  static Event_OutputL O(0, 0);
+  static Event_Dummy   W(0, 0);
 
   if (pos % (2*DIST) == 0) {
-    O = Event_OutputL(pos, &x, 1);
+    O = Event_OutputL(pos, 1);
     return &O;
   } else if (pos % DIST == 0) {
-    I = Event_InputL(pos, &x, 1);
+    I = Event_InputL(pos, 1);
     return &I;
   }
 
-  W = Event_Write(pos, &x, pos);
+  W = Event_Dummy(pos, pos);
   return &W;
 }
 

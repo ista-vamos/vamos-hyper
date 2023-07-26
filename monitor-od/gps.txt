@@ -1,3 +1,0 @@
-Date (month/day/year)	Time (UTC)	Latitude (degrees)	Longitude (degrees)
-10/26/2009	5:49:12 PM	47.64103	-122.32293
-11/6/2009	4:57:41 PM	47.62070	-122.32887
