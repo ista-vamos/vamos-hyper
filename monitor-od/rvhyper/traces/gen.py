@@ -18,26 +18,26 @@ class IOEvent:
     def encode(self):
         return f"{_encode_n('in', self.n_in)};{_encode_n('out', self.n_out)}"
 
+    def short_str(self):
+        return f"{self.n_in};{self.n_out}"
+
 
 p = 0.1
-p_err = 0.001
+#p_err = 0
 
-if len(sys.argv) != 4:
+if len(sys.argv) < 4:
     print("Need arguments: <number of traces> <length of traces> <bits (number of atomic props.)>", file=sys.stderr)
     print(
 f"""
-The script will generate 2*<number of traces> of length <length of traces>
-Traces will contain I/O events with probability p={p} and a dummy events
-with complementary probability 1-p. The I/O event has atomic propositions
-in_0, in_1, ... and out_0, out_1, ... that corresponds to BITS.
+The script will generate <number of traces> of length <length of traces>
+Traces will contain `in` events with probability p={p} and a dummy (false) events
+with complementary probability 1-p. The `in` event has atomic propositions
+in_0, in_1, ... in_{BITS-1}.
 They are populated from uniform range `(0, 2**BITS-1)`, i.e., together `in`
-and `out` give a random unsigned number on `BITS` bits.
+is a random unsigned number on `BITS` bits.
+The last event is an event that has also randomly set `out_*` bits.
 
-The traces come in pairs and every event in the second trace is with
-the probability p_err={p_err} generated a new, which means that it can differ
-from a corresponding event on the first trace.
-
-Parameters `p` and `p_err` can be set in the script.
+Parameter `p` can be set in the script.
 """, file=sys.stderr)
     exit(1)
 
@@ -45,7 +45,12 @@ Parameters `p` and `p_err` can be set in the script.
 TRACE_NUM = int(sys.argv[1])
 TRACE_LEN = int(sys.argv[2])
 BITS = int(sys.argv[3])
-maxnum = (2**BITS)
+FORCE_OD = False
+if len(sys.argv) == 5:
+    if "force-od" in sys.argv[4]:
+        FORCE_OD = True
+
+maxnum = (2**BITS) - 1
 
 def gen_rand_event():
     """
@@ -57,42 +62,66 @@ def gen_rand_event():
     """
     p_0 = randint(0, TRACE_LEN)/TRACE_LEN
     if p_0 <= p:
-        n_in, n_out = randint(0, maxnum), randint(0, maxnum)
-        return IOEvent(n_in, n_out)
+        n_in = randint(0, maxnum)
+        return IOEvent(n_in, 0)
     else:
         return IOEvent(0, 0)
 
 seed() # initialize random numbers
 
-RESOLUTION = 1000
+#RESOLUTION = 1000
 
-differ = 0
-for trnum in range(0, TRACE_NUM):
-    t1 = open(f"{trnum}-1.tr", "w")
-    t2 = open(f"{trnum}-2.tr", "w")
+trnum = 0
+gen_traces = {}
+while trnum < TRACE_NUM:
+    trnum += 1
 
+    t_tmp = []
     for n in range(0, TRACE_LEN):
         e1 = gen_rand_event()
 
-        # 1% of cases gen a different output to t2
+        # generate the output event if this is the last event
         # in the last event
-        if n == TRACE_LEN - 1 and\
-            randint(0, RESOLUTION) < (p_err * RESOLUTION):
-            e2 = IOEvent(e1.n_in, e1.n_out ^ 0x1)
-            differ += 1
+        if n == TRACE_LEN - 1:
+            e1.n_out = randint(0, maxnum)
+           #if randint(0, RESOLUTION) < (p_err * RESOLUTION):
+           #    e2 = IOEvent(e1.n_in,  e1.n_out ^ 0x1)
+           #    differ += 1
+
+        t_tmp.append(e1)
+
+    if FORCE_OD:
+        h1 = " ".join((e.short_str() for e in t_tmp[:-1]))
+        #print(h1)
+        h1 = hash(h1)
+        # if we have found a trace with the same input,
+        # force the same output
+        if h1 in gen_traces:
+            # regenerate the traces
+            t_tmp[-1] = gen_traces[h1]
+           #print("FORCED to")
+           #h1 = " ".join((e.short_str() for e in t_tmp[:-1]))
+           #print(h1)
         else:
-            e2 = e1
+            gen_traces[h1] = t_tmp[-1]
 
-        print(e1.encode(), file=t1)
-        print(e2.encode(), file=t2)
+    with open(f"{trnum}.tr", "w") as tf:
+        for e1 in t_tmp:
+            print(e1.encode(), file=tf)
 
-    t1.close()
-    t2.close()
+# DUMP OD PROPERTY ON THE GIVEN NUMBER OF BYTES
+with open(f"od-{BITS}b.hltl", "w") as f:
+    f.write("forall x. forall y.\n(\n")
+    for b in range(0, BITS):
+        f.write(" & " if b > 0 else "   ")
+        f.write(f"(out_{b}_x <-> out_{b}_y)\n")
+    f.write(")\nW\n~(\n")
+    for b in range(0, BITS):
+        f.write(" & " if b > 0 else "   ")
+        f.write(f"(in_{b}_x <-> in_{b}_y)\n")
+    f.write(")\n")
 
-print(f"Generated {trnum+1} pairs of traces", file=sys.stderr)
-print(f"Number of traces with diff. last event: {differ}", file=sys.stderr)
+print(f"Forced OD: {FORCE_OD}")
+print(f"Generated {trnum} traces", file=sys.stderr)
 
-if differ == 0:
-    print("Did not generate a single different trace, you might want to re-run me!", file=sys.stderr)
-    exit(1)
 exit(0)
