@@ -29,16 +29,16 @@ static void add_new_cfgs(Workbag &workbag, const TracesT &traces,
 #endif
 
     S.clear();
-    S.add(Cfg_1({t.get(), trace}));
-    S.add(Cfg_2({t.get(), trace}));
-    S.add(Cfg_3({t.get(), trace}));
+    S.add(Cfg_1(t.get(), trace));
+    S.add(Cfg_2(t.get(), trace));
+    S.add(Cfg_3(t.get(), trace));
     workbag.push(std::move(S));
 
 #ifndef REDUCT_SYMMETRY
     S.clear();
-    S.add(Cfg_1({trace, t.get()}));
-    S.add(Cfg_2({trace, t.get()}));
-    S.add(Cfg_3({trace, t.get()}));
+    S.add(Cfg_1(trace, t.get()));
+    S.add(Cfg_2(trace, t.get()));
+    S.add(Cfg_3(trace, t.get()));
     workbag.push(std::move(S));
 #endif
   }
@@ -183,7 +183,9 @@ int monitor(Inputs &inputs) {
         std::cout << "  > {";
         if (C.invalid())
             std::cout << "<invalid>; ";
-        for (const auto &cfg : C) {
+
+        for (unsigned i = 0; i < C.size(); ++i) {
+          auto &cfg = C.get(i);
             std::cout << cfg.name() << ",";
         }
         std::cout << "}\n";
@@ -196,7 +198,9 @@ int monitor(Inputs &inputs) {
       }
 
       bool non_empty = false;
-      for (auto &c : C) {
+      size_t sz = C.size();
+      for (unsigned i = 0; i < sz; ++i) {
+        auto &c = C.get(i);
         switch (c.index()) {
         case 0: /* Cfg_1 */ {
           auto &cfg = c.get<Cfg_1>();

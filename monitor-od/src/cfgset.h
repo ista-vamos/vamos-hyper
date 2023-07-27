@@ -77,7 +77,7 @@ struct AnyCfg {
 template <size_t MAX_SIZE> struct ConfigurationsSet {
   size_t _size{0};
   bool _invalid{false};
-  std::array<AnyCfg, MAX_SIZE> _confs;
+  AnyCfg _confs[MAX_SIZE];
 
   /*
   void add(const AnyCfg &c) {
@@ -105,10 +105,17 @@ template <size_t MAX_SIZE> struct ConfigurationsSet {
   void setInvalid() { _invalid = true; }
   bool invalid() const { return _invalid; }
 
-  auto begin() -> auto { return _confs.begin(); }
-  auto end() -> auto { return _confs.end(); }
-  auto begin() const -> auto { return _confs.begin(); }
-  auto end() const -> auto { return _confs.end(); }
+  size_t size() const { return _size; }
+
+  AnyCfg& get(unsigned i) {
+      assert(i < _size);
+      return _confs[i];
+  }
+
+  const AnyCfg& get(unsigned i) const {
+      assert(i < _size);
+      return _confs[i];
+  }
 
 };
 

@@ -199,18 +199,26 @@ struct mPE_3 {
 
 class ConfigurationBase {};
 
-template <typename TraceTy, size_t K>
+template <typename TraceTy>
 class Configuration : public ConfigurationBase {
 
 protected:
   bool _failed{false};
-  size_t positions[K] = {0};
-  std::array<TraceTy *, K> traces;
+  size_t positions[2] = {0};
+  TraceTy * traces[2];
 
 public:
   Configuration() {}
   // Configuration& operator=(const Configuration&) = default;
-  Configuration(const std::array<TraceTy *, K> &tr) : traces(tr) {}
+  Configuration(TraceTy *tr[2]) {
+    traces[0] = tr[0];
+    traces[1] = tr[1];
+  }
+
+  Configuration(TraceTy *tr0, TraceTy *tr1) {
+    traces[0] = tr0;
+    traces[1] = tr1;
+  }
 
   TraceTy *trace(size_t idx) { return traces[idx]; }
   const TraceTy *trace(size_t idx) const { return traces[idx]; }
@@ -219,7 +227,7 @@ public:
 };
 
 template <typename MpeTy>
-class CfgTemplate : public Configuration<Trace<TraceEvent>, 2> {
+class CfgTemplate : public Configuration<Trace<TraceEvent>> {
 
 protected:
   MpeTy mPE{};
@@ -276,10 +284,13 @@ public:
 
   CfgTemplate() {}
   // CfgTemplate& operator=(const CfgTemplate&) = default;
-  CfgTemplate(const std::array<Trace<TraceEvent> *, 2> &traces)
+  CfgTemplate(Trace<TraceEvent> *traces[2])
       : Configuration(traces) {}
 
-  CfgTemplate(const std::array<Trace<TraceEvent> *, 2> &traces,
+  CfgTemplate(Trace<TraceEvent> *t0, Trace<TraceEvent> *t1)
+      : Configuration(t0, t1) {}
+
+  CfgTemplate(Trace<TraceEvent> *traces[2],
               const size_t pos[2])
       : Configuration(traces) {
     positions[0] = pos[0];
@@ -305,10 +316,13 @@ struct Cfg_1 : public CfgTemplate<mPE_1> {
 
   Cfg_1(){ INIT_ID; };
   // Cfg_1& operator=(const Cfg_1&) = default;
-  Cfg_1(const std::array<Trace<TraceEvent> *, 2> &traces)
+  Cfg_1(Trace<TraceEvent> *traces[2])
       : CfgTemplate(traces) { INIT_ID; }
 
-  Cfg_1(const std::array<Trace<TraceEvent> *, 2> &traces, const size_t pos[2])
+  Cfg_1(Trace<TraceEvent> *t0, Trace<TraceEvent> *t1)
+      : CfgTemplate(t0, t1) { INIT_ID; }
+
+  Cfg_1(Trace<TraceEvent> *traces[2], const size_t pos[2])
       :  CfgTemplate(traces, pos) { INIT_ID; }
 
   void queueNextConfigurations(Workbag &);
@@ -332,10 +346,12 @@ struct Cfg_2 : public CfgTemplate<mPE_2> {
 #endif
 
   Cfg_2(){ INIT_ID; };
-  Cfg_2(const std::array<Trace<TraceEvent> *, 2> &traces)
+  Cfg_2(Trace<TraceEvent> *traces[2])
       : CfgTemplate(traces) { INIT_ID; }
 
-  Cfg_2(const std::array<Trace<TraceEvent> *, 2> &traces, const size_t pos[2])
+  Cfg_2(Trace<TraceEvent> *t0, Trace<TraceEvent> *t1)
+      : CfgTemplate(t0, t1) { INIT_ID; }
+  Cfg_2(Trace<TraceEvent> *traces[2], const size_t pos[2])
       : CfgTemplate(traces, pos) { INIT_ID; }
 };
 
@@ -356,10 +372,12 @@ struct Cfg_3 : public CfgTemplate<mPE_3> {
 #define INIT_ID
 #endif
   Cfg_3(){ INIT_ID; }
-  Cfg_3(const std::array<Trace<TraceEvent> *, 2> &traces)
+  Cfg_3(Trace<TraceEvent> *traces[2])
       : CfgTemplate(traces) { INIT_ID; }
 
-  Cfg_3(const std::array<Trace<TraceEvent> *, 2> &traces, const size_t pos[2])
+  Cfg_3(Trace<TraceEvent> *t0, Trace<TraceEvent> *t1)
+      : CfgTemplate(t0, t1) { INIT_ID; }
+  Cfg_3(Trace<TraceEvent> *traces[2], const size_t pos[2])
       : CfgTemplate(traces, pos) { INIT_ID; }
 };
 
