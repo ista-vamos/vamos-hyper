@@ -2,11 +2,7 @@
 
 add_executable(monitor-rvhyper ../src/main_argv.cpp ../monitor_inputs_rvhyper.cpp)
 target_include_directories(monitor-rvhyper PUBLIC ${vamos-buffers_INCLUDE_DIRS})
-target_link_libraries(monitor-rvhyper PRIVATE monitor-od-dbg)
-target_compile_definitions(monitor-rvhyper
-			   PRIVATE REDUCT_SYMMETRY=1
-			   PRIVATE REDUCT_REFLEXIVITY=1
-			   )
+target_link_libraries(monitor-rvhyper PRIVATE monitor-od)
 
 set(MONITOR_MAIN ../src/main.cpp)
 
@@ -20,8 +16,6 @@ target_compile_definitions(${target}
 	                   #PRIVATE RAND_SEED=0xdeed
 			   PRIVATE NUM_STREAMS=${NUM_STREAMS}
 			   PRIVATE STREAM_LEN=${STREAM_LEN}
-			   PRIVATE REDUCT_SYMMETRY=1
-			   PRIVATE REDUCT_REFLEXIVITY=1
 			   )
 endforeach()
 endforeach()
@@ -36,8 +30,6 @@ target_link_libraries(${target} PRIVATE monitor-od)
 target_compile_definitions(${target}
 			   PRIVATE NUM_STREAMS=${NUM_STREAMS}
 			   PRIVATE STREAM_LEN=${STREAM_LEN}
-			   PRIVATE REDUCT_SYMMETRY=1
-			   PRIVATE REDUCT_REFLEXIVITY=1
 			   PRIVATE DIST=${DIST}
 			   )
 endforeach()
@@ -55,8 +47,6 @@ target_link_libraries(${target} PRIVATE monitor-od)
 target_compile_definitions(${target}
 			   PRIVATE NUM_STREAMS=${NUM_STREAMS}
 			   PRIVATE STREAM_LEN=${STREAM_LEN}
-			   PRIVATE REDUCT_SYMMETRY=1
-			   PRIVATE REDUCT_REFLEXIVITY=1
 			   PRIVATE SPOS=${SPOS}
 			   PRIVATE DIST=${DIST}
 			   )

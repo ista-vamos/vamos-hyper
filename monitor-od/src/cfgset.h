@@ -57,6 +57,21 @@ struct AnyCfg {
       }
     return *this;
   }
+
+#ifdef DEBUG
+#ifdef DEBUG_CFGS
+  std::string name() const {
+      if (index() == 0)
+          return cfg.cfg1.name();
+      if (index() == 1)
+          return cfg.cfg2.name();
+      if (index() == 2)
+          return cfg.cfg3.name();
+
+      return "<invalid>";
+  }
+#endif
+#endif
 };
 
 template <size_t MAX_SIZE> struct ConfigurationsSet {
@@ -72,6 +87,7 @@ template <size_t MAX_SIZE> struct ConfigurationsSet {
   */
 
   void add(AnyCfg &&c) {
+    assert(!_invalid); 
     assert(_size < MAX_SIZE);
     _confs[_size++] = std::move(c);
   }
@@ -89,8 +105,11 @@ template <size_t MAX_SIZE> struct ConfigurationsSet {
   void setInvalid() { _invalid = true; }
   bool invalid() const { return _invalid; }
 
-  auto begin() -> auto{ return _confs.begin(); }
-  auto end() -> auto{ return _confs.end(); }
+  auto begin() -> auto { return _confs.begin(); }
+  auto end() -> auto { return _confs.end(); }
+  auto begin() const -> auto { return _confs.begin(); }
+  auto end() const -> auto { return _confs.end(); }
+
 };
 
 #endif // OD_CFGSET_H

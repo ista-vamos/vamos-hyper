@@ -34,7 +34,7 @@ static void add_new_cfgs(Workbag &workbag, const TracesT &traces,
     S.add(Cfg_3({t.get(), trace}));
     workbag.push(std::move(S));
 
-#ifdef REDUCT_SYMMETRY
+#ifndef REDUCT_SYMMETRY
     S.clear();
     S.add(Cfg_1({trace, t.get()}));
     S.add(Cfg_2({trace, t.get()}));
@@ -57,6 +57,12 @@ template <typename CfgTy> Actions move_cfg(Workbag &workbag, CfgTy &cfg) {
   for (size_t idx = 0; idx < 2; ++idx) {
     if (cfg.canProceed(idx)) {
       no_progress = false;
+#ifdef DEBUG
+#ifdef DEBUG_CFGS
+      std::cout << "MOVE " << cfg.name() << ": ";
+#endif
+#endif
+
       auto res = cfg.step(idx);
       if (res == PEStepResult::Accept) {
         // std::cout << "CFG " << &c << " from " << &C << " ACCEPTED\n";
@@ -147,6 +153,7 @@ int monitor(Inputs &inputs) {
   size_t max_wbg_size = 0;
   //size_t tuples_num = 0;
 #endif
+  size_t violations = 0;
 
   while (true) {
     /////////////////////////////////
@@ -167,6 +174,20 @@ int monitor(Inputs &inputs) {
 #ifdef DEBUG
 #ifdef DEBUG_WORKBAG
     std::cout << "WORKBAG size: " << wbg_size << "\n";
+    size_t n = 0;
+    for (auto &C : workbag) {
+        if (n++ >= 10) {
+            std::cout << "  ... and " << wbg_size - 10 << " more elements\n";
+            break;
+        }
+        std::cout << "  > {";
+        if (C.invalid())
+            std::cout << "<invalid>; ";
+        for (const auto &cfg : C) {
+            std::cout << cfg.name() << ",";
+        }
+        std::cout << "}\n";
+    }
 #endif
 #endif
     for (auto &C : workbag) {
@@ -206,6 +227,7 @@ int monitor(Inputs &inputs) {
           switch (move_cfg<Cfg_2>(new_workbag, cfg)) {
           case CFGSET_MATCHED:
 #ifdef OUTPUT
+            ++violations;
             std::cout
                 << "\033[1;31mOBSERVATIONAL DETERMINISM VIOLATED!\033[0m\n"
                 << "Traces:\n"
@@ -213,7 +235,7 @@ int monitor(Inputs &inputs) {
                 << "  " << cfg.trace(1)->descr() << "\n";
 #endif
 #ifdef EXIT_ON_ERROR
-            goto violated;
+            goto end;
 #endif
           // fall-through to discard this set of configs
           case CFGSET_DONE:
@@ -279,24 +301,21 @@ int monitor(Inputs &inputs) {
     if (workbag.empty() && inputs.done()) {
 #ifdef OUTPUT
       std::cout << "No more traces to come, workbag empty\n";
-      std::cout << "\033[1;32mNO VIOLATION OF OBSERVATIONAL DETERMINISM "
-                   "FOUND!\033[0m\n";
+      if (violations == 0) {
+          std::cout << "\033[1;32mNO VIOLATION OF OBSERVATIONAL DETERMINISM "
+                       "FOUND!\033[0m\n";
+      }
 #endif
       break;
     }
   }
 
+end:
 #ifdef STATS
     std::cout << "Max workbag size: " << max_wbg_size << "\n";
     std::cout << "Traces #: " << traces.size() << "\n";
 #endif
+    std::cout << "Found violations #: " << violations << "\n";
 
-  return 0;
-
-violated:
-#ifdef STATS
-  std::cout << "Max workbag size: " << max_wbg_size << "\n";
-  std::cout << "Traces #: " << traces.size() << "\n";
-#endif
-  return 1;
+  return violations > 0;
 }

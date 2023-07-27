@@ -36,3 +36,11 @@ void Cfg_1::queueNextConfigurations(Workbag &workbag) {
   S.add(Cfg_3(traces, positions));
   workbag.push(std::move(S));
 }
+
+#ifdef DEBUG
+#ifdef DEBUG_CFGS
+size_t Cfg_1::__id = 0;
+size_t Cfg_2::__id = 0;
+size_t Cfg_3::__id = 0;
+#endif 
+#endif 

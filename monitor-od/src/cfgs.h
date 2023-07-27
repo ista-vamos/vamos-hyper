@@ -15,6 +15,7 @@ std::ostream &operator<<(std::ostream &s, const PEStepResult r);
 
 class Workbag;
 
+/*
 template <typename TraceT, typename MStringT>
 bool match_eq(TraceT *t1, const MStringT &m1, TraceT *t2, const MStringT &m2) {
   assert(!m1.empty() && !m2.empty());
@@ -65,6 +66,7 @@ bool match_eq(TraceT *t1, const MStringT &m1, TraceT *t2, const MStringT &m2) {
   assert(false && "Unreachable");
   abort();
 }
+*/
 
 struct PE1 : public PrefixExpression {
   PEStepResult step(const Event *ev, size_t pos) {
@@ -73,8 +75,11 @@ struct PE1 : public PrefixExpression {
     switch ((Kind)e->kind()) {
     case Kind::InputL:
     case Kind::OutputL:
+#ifndef NDEBUG
       state = 1;
-      M.append(MString::Letter(pos, pos));
+#endif
+      match_pos = pos;
+      // M.append(MString::Letter(pos, pos));
       return PEStepResult::Accept;
     default:
       assert(state == 0);
@@ -90,8 +95,11 @@ struct PE2 : public PrefixExpression {
     switch ((Kind)e->kind()) {
     case Kind::OutputL:
     case Kind::End:
+#ifndef NDEBUG
       state = 1;
-      M.append(MString::Letter(pos, pos));
+#endif
+      //M.append(MString::Letter(pos, pos));
+      match_pos = pos;
       return PEStepResult::Accept;
     default:
       assert(state == 0);
@@ -106,8 +114,12 @@ struct PE3 : public PrefixExpression {
 
     switch ((Kind)e->kind()) {
     case Kind::InputL:
+    case Kind::End:
+#ifndef NDEBUG
       state = 1;
-      M.append(MString::Letter(pos, pos));
+#endif
+      match_pos = pos;
+      //M.append(MString::Letter(pos, pos));
       return PEStepResult::Accept;
     default:
       assert(state == 0);
@@ -116,61 +128,80 @@ struct PE3 : public PrefixExpression {
   }
 };
 
-struct mPE_1 : public MultiTracePrefixExpression<2> {
+struct mPE_1 {
+  PE1 _exprs[2];
+  bool _accepted[2] = {false, false};
 
-  mPE_1() : MultiTracePrefixExpression<2>({PE1(), PE1()}) {}
+  bool accepted(size_t idx) const { return _accepted[idx]; }
+  bool accepted() const { return _accepted[0] && _accepted[1]; }
 
   PEStepResult step(size_t idx, const Event *ev, size_t pos) {
     assert(idx < 2);
-    auto res = static_cast<PE1 *>(&_exprs[idx])->step(ev, pos);
+    auto res = _exprs[idx].step(ev, pos);
     if (res == PEStepResult::Accept)
       _accepted[idx] = true;
     return res;
   }
 
   template <typename TraceT> bool cond(TraceT *t1, TraceT *t2) const {
-    return match_eq(t1, _exprs[0].M, t2, _exprs[1].M);
+    return *static_cast<TraceEvent *>(t1->get(_exprs[0].match_pos))
+            == *static_cast<TraceEvent *>(t2->get(_exprs[1].match_pos));
   }
 };
 
-struct mPE_2 : public MultiTracePrefixExpression<2> {
+struct mPE_2 {
+  PE2 _exprs[2];
+  bool _accepted[2] = {false, false};
 
-  mPE_2() : MultiTracePrefixExpression<2>({PE2(), PE2()}) {}
+  bool accepted(size_t idx) const { return _accepted[idx]; }
+  bool accepted() const { return _accepted[0] && _accepted[1]; }
 
   PEStepResult step(size_t idx, const Event *ev, size_t pos) {
     assert(idx < 2);
-    auto res = static_cast<PE2 *>(&_exprs[idx])->step(ev, pos);
+    auto res = _exprs[idx].step(ev, pos);
     if (res == PEStepResult::Accept)
       _accepted[idx] = true;
     return res;
   }
 
   template <typename TraceT> bool cond(TraceT *t1, TraceT *t2) const {
-    return !match_eq(t1, _exprs[0].M, t2, _exprs[1].M);
+    return *static_cast<TraceEvent *>(t1->get(_exprs[0].match_pos))
+            != *static_cast<TraceEvent *>(t2->get(_exprs[1].match_pos));
   }
 };
 
-struct mPE_3 : public MultiTracePrefixExpression<2> {
+struct mPE_3 {
 
-  mPE_3() : MultiTracePrefixExpression<2>({PE3(), PE3()}) {}
+  PE3 _exprs[2];
+  bool _accepted[2] = {false, false};
+
+  bool accepted(size_t idx) const { return _accepted[idx]; }
+  bool accepted() const { return _accepted[0] && _accepted[1]; }
 
   PEStepResult step(size_t idx, const Event *ev, size_t pos) {
     assert(idx < 2);
-    auto res = static_cast<PE3 *>(&_exprs[idx])->step(ev, pos);
+    auto res = _exprs[idx].step(ev, pos);
     if (res == PEStepResult::Accept)
       _accepted[idx] = true;
     return res;
   }
 
   template <typename TraceT> bool cond(TraceT *t1, TraceT *t2) const {
-    return !match_eq(t1, _exprs[0].M, t2, _exprs[1].M);
+    return *static_cast<TraceEvent *>(t1->get(_exprs[0].match_pos))
+            != *static_cast<TraceEvent *>(t2->get(_exprs[1].match_pos));
   }
 };
+
+
+
+
+
 
 class ConfigurationBase {};
 
 template <typename TraceTy, size_t K>
 class Configuration : public ConfigurationBase {
+
 protected:
   bool _failed{false};
   size_t positions[K] = {0};
@@ -189,6 +220,7 @@ public:
 
 template <typename MpeTy>
 class CfgTemplate : public Configuration<Trace<TraceEvent>, 2> {
+
 protected:
   MpeTy mPE{};
 
@@ -197,11 +229,13 @@ public:
     return !mPE.accepted(idx) && trace(idx)->size() > positions[idx];
   }
 
-  void queueNextConfigurations(Workbag &) { /* no next configurations */
+  void queueNextConfigurations(Workbag &) {
+      /* no next configurations by default*/
   }
 
   PEStepResult step(size_t idx) {
     assert(canProceed(idx) && "Step on invalid PE");
+    assert(!_failed);
 
     const Event *ev = trace(idx)->get(positions[idx]);
     assert(ev && "No event");
@@ -209,7 +243,7 @@ public:
 
 #ifdef DEBUG
 #ifdef DEBUG_CFGS
-    std::cout << "Cfg[" << this << "](𝜏" << idx << ") t" << trace(idx)->id()
+    std::cout << "(𝜏" << idx << ") t" << trace(idx)->id()
               << "[" << positions[idx] << "]"
               << "@" << *static_cast<const TraceEvent *>(ev) << ", "
               << positions[idx] << " => " << res << "\n";
@@ -254,33 +288,79 @@ public:
 };
 
 struct Cfg_1 : public CfgTemplate<mPE_1> {
-  Cfg_1(){};
+#ifdef DEBUG
+#ifdef DEBUG_CFGS
+  static size_t __id;
+  size_t _id;
+
+#define INIT_ID (_id = ++__id)
+
+  std::string name() const {
+      return "cfg_1#" + std::to_string(_id);
+  }
+#endif
+#else
+#define INIT_ID
+#endif
+
+  Cfg_1(){ INIT_ID; };
   // Cfg_1& operator=(const Cfg_1&) = default;
   Cfg_1(const std::array<Trace<TraceEvent> *, 2> &traces)
-      : CfgTemplate(traces) {}
+      : CfgTemplate(traces) { INIT_ID; }
 
   Cfg_1(const std::array<Trace<TraceEvent> *, 2> &traces, const size_t pos[2])
-      : CfgTemplate(traces, pos) {}
+      :  CfgTemplate(traces, pos) { INIT_ID; }
 
   void queueNextConfigurations(Workbag &);
+
 };
 
 struct Cfg_2 : public CfgTemplate<mPE_2> {
-  Cfg_2(){};
+#ifdef DEBUG
+#ifdef DEBUG_CFGS
+  static size_t __id;
+  size_t _id;
+
+#define INIT_ID (_id = ++__id)
+
+  std::string name() const {
+      return "cfg_2#" + std::to_string(_id);
+  }
+#endif
+#else
+#define INIT_ID
+#endif
+
+  Cfg_2(){ INIT_ID; };
   Cfg_2(const std::array<Trace<TraceEvent> *, 2> &traces)
-      : CfgTemplate(traces) {}
+      : CfgTemplate(traces) { INIT_ID; }
 
   Cfg_2(const std::array<Trace<TraceEvent> *, 2> &traces, const size_t pos[2])
-      : CfgTemplate(traces, pos) {}
+      : CfgTemplate(traces, pos) { INIT_ID; }
 };
 
+
 struct Cfg_3 : public CfgTemplate<mPE_3> {
-  Cfg_3(){};
+#ifdef DEBUG
+#ifdef DEBUG_CFGS
+  static size_t __id;
+  size_t _id;
+
+#define INIT_ID (_id = ++__id)
+
+  std::string name() const {
+      return "cfg_3#" + std::to_string(_id);
+  }
+#endif
+#else
+#define INIT_ID
+#endif
+  Cfg_3(){ INIT_ID; }
   Cfg_3(const std::array<Trace<TraceEvent> *, 2> &traces)
-      : CfgTemplate(traces) {}
+      : CfgTemplate(traces) { INIT_ID; }
 
   Cfg_3(const std::array<Trace<TraceEvent> *, 2> &traces, const size_t pos[2])
-      : CfgTemplate(traces, pos) {}
+      : CfgTemplate(traces, pos) { INIT_ID; }
 };
 
 #endif
