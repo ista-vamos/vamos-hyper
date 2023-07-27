@@ -52,7 +52,7 @@ if len(sys.argv) == 5:
 
 maxnum = (2**BITS) - 1
 
-def gen_rand_event():
+def gen_rand_in_event():
     """
     Generate I/O event with probability `p` and a dummy event with
     probability `1-p`. The I/O event will have random fields
@@ -78,12 +78,12 @@ while trnum < TRACE_NUM:
 
     t_tmp = []
     for n in range(0, TRACE_LEN):
-        e1 = gen_rand_event()
+        e1 = gen_rand_in_event()
 
         # generate the output event if this is the last event
         # in the last event
         if n == TRACE_LEN - 1:
-            e1.n_out = randint(0, maxnum)
+            e1 = IOEvent(0, randint(0, maxnum))
            #if randint(0, RESOLUTION) < (p_err * RESOLUTION):
            #    e2 = IOEvent(e1.n_in,  e1.n_out ^ 0x1)
            #    differ += 1

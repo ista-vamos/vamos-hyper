@@ -47,6 +47,8 @@ struct PE2 : public PrefixExpression {
       //M.append(MString::Letter(pos, pos));
       match_pos = pos;
       return PEStepResult::Accept;
+    case Kind::InputL:
+      return PEStepResult::Reject;
     default:
       assert(state == 0);
       return PEStepResult::None;
@@ -60,6 +62,7 @@ struct PE3 : public PrefixExpression {
 
     switch ((Kind)e->get_kind()) {
     case Kind::InputL:
+    case Kind::OutputL:
     case Kind::End:
 #ifndef NDEBUG
       state = 1;
@@ -160,8 +163,10 @@ struct mPE_3 {
   }
 
   template <typename TraceT> bool cond(TraceT *t1, TraceT *t2) const {
-    return *static_cast<TraceEvent *>(t1->get(_exprs[0].match_pos))
-            != *static_cast<TraceEvent *>(t2->get(_exprs[1].match_pos));
+    auto *e1 = static_cast<TraceEvent *>(t1->get(_exprs[0].match_pos));
+    auto *e2 = static_cast<TraceEvent *>(t2->get(_exprs[1].match_pos));
+    return *e1 != *e2 &&
+            (((Kind)e1->get_kind() != Kind::OutputL) || ((Kind)e2->get_kind() != Kind::OutputL));
   }
 };
 

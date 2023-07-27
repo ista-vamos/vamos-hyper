@@ -60,6 +60,7 @@ template <typename CfgTy> Actions move_cfg(Workbag &workbag, CfgTy &cfg) {
 #endif
 
 #ifdef MULTIPLE_MOVES
+#error "Not supported yet"
     auto res = cfg.stepN();
     if (res == PEStepResult::Accept) {
       // std::cout << "CFG " << &c << " from " << &C << " ACCEPTED\n";
@@ -85,32 +86,48 @@ template <typename CfgTy> Actions move_cfg(Workbag &workbag, CfgTy &cfg) {
 #else // !MULTIPLE_MOVES
 
   bool no_progress = true;
-  if (cfg.canProceed<0>()) {
+  if (cfg.template canProceed<0>()) {
     no_progress = false;
 
-    auto res = cfg.step<0>();
+    auto res = cfg.template step<0>();
     if (res == PEStepResult::Accept) {
-      // std::cout << "CFG " << &c << " from " << &C << " ACCEPTED\n";
+#ifdef DEBUG
+#ifdef DEBUG_CFGS
+      std::cout << cfg.name() <<  "** accepted **\n";
+#endif
+#endif
       cfg.queueNextConfigurations(workbag);
       return CFGSET_MATCHED;
     }
     if (res == PEStepResult::Reject) {
-      // std::cout << "CFG " << &c << " from " << &C << " REJECTED\n";
+#ifdef DEBUG
+#ifdef DEBUG_CFGS
+      std::cout << cfg.name() <<  "** rejected **\n";
+#endif
+#endif
       return CFG_FAILED;
     }
   }
 
-  if (cfg.canProceed<1>()) {
+  if (cfg.template canProceed<1>()) {
     no_progress = false;
 
-    auto res = cfg.step<1>();
+    auto res = cfg.template step<1>();
     if (res == PEStepResult::Accept) {
-      // std::cout << "CFG " << &c << " from " << &C << " ACCEPTED\n";
+#ifdef DEBUG
+#ifdef DEBUG_CFGS
+      std::cout << cfg.name() <<  "** accepted **\n";
+#endif
+#endif
       cfg.queueNextConfigurations(workbag);
       return CFGSET_MATCHED;
     }
     if (res == PEStepResult::Reject) {
-      // std::cout << "CFG " << &c << " from " << &C << " REJECTED\n";
+#ifdef DEBUG
+#ifdef DEBUG_CFGS
+      std::cout << cfg.name() <<  "** rejected **\n";
+#endif
+#endif
       return CFG_FAILED;
     }
   }
@@ -275,8 +292,8 @@ int monitor(Inputs &inputs) {
 
           switch (move_cfg<Cfg_2>(new_workbag, cfg)) {
           case CFGSET_MATCHED:
-#ifdef OUTPUT
             ++violations;
+#ifdef OUTPUT
             std::cout
                 << "\033[1;31mOBSERVATIONAL DETERMINISM VIOLATED!\033[0m\n"
                 << "Traces:\n"

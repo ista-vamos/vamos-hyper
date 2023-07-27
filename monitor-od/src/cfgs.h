@@ -37,7 +37,8 @@ public:
 
   TraceTy *trace(size_t idx) { return traces[idx]; }
   const TraceTy *trace(size_t idx) const { return traces[idx]; }
-  size_t pos(size_t idx) const { return positions[idx]; }
+
+  // size_t pos(size_t idx) const { return positions[idx]; }
 
   bool failed() const { return _failed; }
 };
@@ -55,23 +56,26 @@ public:
 
   template <size_t idx>
   bool canProceed() const {
-    return !mPE.accepted(idx) && trace(idx)->size() > positions[idx];
+    return !mPE.accepted(idx) && traces[idx]->size() > positions[idx];
   }
 
   // how many steps can we proceed?
+  /*
   size_t canProceedN(size_t idx) const {
-      return trace(idx)->size() - pos(idx);
+      return traces[idx]->size() - positions[idx];
   }
+  */
 
   template <size_t idx>
   size_t canProceedN() const {
-      return trace(idx)->size() - pos(idx);
+      return traces[idx]->size() - positions[idx];
   }
 
   void queueNextConfigurations(Workbag &) {
       /* no next configurations by default*/
   }
 
+  /*
   PEStepResult step(size_t idx) {
     assert(canProceed(idx) && "Step on invalid PE");
     assert(!_failed);
@@ -96,10 +100,19 @@ public:
       if (mPE.accepted()) {
         // std::cout << "mPE matched prefixes\n";
         if (mPE.cond(trace(0), trace(1))) {
-          // std::cout << "Condition SAT!\n";
+#ifdef DEBUG
+#ifdef DEBUG_CFGS
+        std::cout << "MPE matched\n";
+#endif
+#endif
           return PEStepResult::Accept;
         } else {
           // std::cout << "Condition UNSAT!\n";
+#ifdef DEBUG
+#ifdef DEBUG_CFGS
+        std::cout << "MPE not matched (UNSAT condition)\n";
+#endif
+#endif
           _failed = true;
           return PEStepResult::Reject;
         }
@@ -112,7 +125,7 @@ public:
       return res;
     }
   }
-
+*/
   template <size_t idx>
   PEStepResult step() {
     assert(canProceed<idx>() && "Step on invalid PE");
@@ -120,7 +133,7 @@ public:
 
     const Event *ev = traces[idx]->get(positions[idx]);
     assert(ev && "No event");
-    auto res = mPE.step<idx>(ev, positions[idx]);
+    auto res = mPE.template step<idx>(ev, positions[idx]);
 
 #ifdef DEBUG
 #ifdef DEBUG_CFGS
@@ -156,7 +169,7 @@ public:
   }
 
 
-
+#if 0
   // Do as many steps as possible in this configuration
   template <size_t idx>
   PEStepResult stepN() {
@@ -215,6 +228,7 @@ public:
     }
     return PEStepResult::None;
   }
+#endif
 
 
   CfgTemplate() {}
