@@ -72,8 +72,8 @@ template <typename CfgTy> Actions move_cfg(Workbag &workbag, CfgTy &cfg) {
       return CFG_FAILED;
     }
 
-    if (cfg.canProceedN(0) == 0 &&
-        cfg.canProceedN(1) == 0) {
+    if (cfg.canProceedN<0>() == 0 &&
+        cfg.canProceedN<1>() == 0) {
         // check if the traces are done
         for (size_t idx = 0; idx < 2; ++idx) {
           if (!cfg.trace(idx)->done())
