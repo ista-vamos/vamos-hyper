@@ -38,8 +38,8 @@ static const char *color_reset = "\033[0m";
 
 std::ostream &operator<<(std::ostream &s, const TraceEvent &ev) {
   s << "TraceEvent(" << color_green << std::setw(7) << std::left
-    << kindToStr((Kind)ev.kind()) << color_reset << ", " << color_red
-    << std::setw(2) << std::right << ev.id()
+    << kindToStr((Kind)ev.get_kind()) << color_reset << ", " << color_red
+    << std::setw(2) << std::right << ev.get_id()
     << color_reset
     // all data are the same, it doesn't matter how we access them
     << ", lat=" << ev.data.InputL.lat << ", lng=" << ev.data.InputL.lng

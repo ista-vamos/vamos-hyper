@@ -37,10 +37,10 @@ static const char *color_red = "\033[0;31m";
 static const char *color_reset = "\033[0m";
 
 std::ostream &operator<<(std::ostream &s, const TraceEvent &ev) {
-  Kind kind = static_cast<Kind>(ev.kind());
+  Kind kind = static_cast<Kind>(ev.get_kind());
   s << "TraceEvent(" << color_green << std::setw(7) << std::left
     << kindToStr(kind) << color_reset << ", " << color_red
-    << std::setw(2) << std::right << ev.id()
+    << std::setw(2) << std::right << ev.get_id()
     << color_reset;
   if (kind == Kind::InputL || kind == Kind::OutputL) {
     s << ", value=" << ev.data.InputL.value;

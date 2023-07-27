@@ -46,7 +46,7 @@ struct TraceEvent : Event {
   TraceEvent(vms_kind k, vms_eventid id) : Event(k, id) {}
 
   bool operator==(const TraceEvent &rhs) const {
-    return kind() == rhs.kind() && (kind() == Event::doneKind() ||
+    return get_kind() == rhs.get_kind() && (get_kind() == Event::doneKind() ||
                                     (data.InputL.lat == rhs.data.InputL.lat &&
                                      data.InputL.lng == rhs.data.InputL.lng));
   }

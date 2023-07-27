@@ -72,9 +72,9 @@ struct TTransformer2 : public TraceTransformerNM<1, 1, TEvent> {
     StepResult result = StepResult::NoEvent;
 
     if (auto *e = inputs[0]->get()) {
-      if (e->kind() == (vms_kind)Kind::A) {
+      if (e->get_kind() == (vms_kind)Kind::A) {
         auto *ev = static_cast<Event_A *>(e);
-        outputs[0]->push(Event_A{ev->id(), ev->x() % 2});
+        outputs[0]->push(Event_A{ev->get_id(), ev->x() % 2});
         inputs[0]->consume();
         result = StepResult::Progress;
       }
@@ -99,9 +99,9 @@ struct OutTransformer : public TraceTransformerNM<4, 0, void> {
         assert(e && "No event event when hasOutputOn() == true");
         std::cout << "out " << i << "[" << n[i] << "]: ";
 
-        if (e->kind() == (vms_kind)Kind::A) {
+        if (e->get_kind() == (vms_kind)Kind::A) {
           std::cout << static_cast<Event_A *>(e)->x() << "\n";
-        } else if (e->kind() == (vms_kind)Kind::B) {
+        } else if (e->get_kind() == (vms_kind)Kind::B) {
           std::cout << static_cast<Event_B *>(e)->x() << "\n";
         }
         ++n[i];

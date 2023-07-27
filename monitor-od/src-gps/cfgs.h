@@ -70,7 +70,7 @@ struct PE1 : public PrefixExpression {
   PEStepResult step(const Event *ev, size_t pos) {
     const auto *e = static_cast<const TraceEvent *>(ev);
 
-    switch ((Kind)e->kind()) {
+    switch ((Kind)e->get_kind()) {
     case Kind::InputL:
     case Kind::OutputL:
       state = 1;
@@ -87,7 +87,7 @@ struct PE2 : public PrefixExpression {
   PEStepResult step(const Event *ev, size_t pos) {
     const auto *e = static_cast<const TraceEvent *>(ev);
 
-    switch ((Kind)e->kind()) {
+    switch ((Kind)e->get_kind()) {
     case Kind::OutputL:
     case Kind::End:
       state = 1;
@@ -104,7 +104,7 @@ struct PE3 : public PrefixExpression {
   PEStepResult step(const Event *ev, size_t pos) {
     const auto *e = static_cast<const TraceEvent *>(ev);
 
-    switch ((Kind)e->kind()) {
+    switch ((Kind)e->get_kind()) {
     case Kind::InputL:
       state = 1;
       M.append(MString::Letter(pos, pos));

@@ -78,9 +78,9 @@ struct OutTransformer : public TraceTransformerNM<4, 0, void> {
         assert(e && "No event event when hasOutputOn() == true");
         std::cout << "out " << i << "[" << n[i] << "]: ";
 
-        if (e->kind() == (vms_kind)Kind::A) {
+        if (e->get_kind() == (vms_kind)Kind::A) {
           std::cout << static_cast<Event_A *>(e)->x() << "\n";
-        } else if (e->kind() == (vms_kind)Kind::B) {
+        } else if (e->get_kind() == (vms_kind)Kind::B) {
           std::cout << static_cast<Event_B *>(e)->x() << "\n";
         }
         ++n[i];

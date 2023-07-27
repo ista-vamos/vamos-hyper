@@ -37,12 +37,16 @@ public:
 
 template <typename EventTy> class Trace : public TraceBase {
   std::vector<EventTy> _events;
+  // we cache size of the vector, it has acually quite nice
+  // impact on the runtime as we query the size all the time
+  // (in canProceed())
+  size_t _size{0};
 
 public:
   Trace(size_t id) : TraceBase(id) {}
 
-  void append(const EventTy *e) { _events.push_back(*e); }
-  void append(const EventTy &e) { _events.push_back(e); };
+  void append(const EventTy *e) { ++_size; _events.push_back(*e); }
+  void append(const EventTy &e) { ++_size; _events.push_back(e); };
 
   Event *get(size_t idx) { return &_events[idx]; }
   const Event *get(size_t idx) const { return &_events[idx]; }
@@ -50,7 +54,7 @@ public:
   Event *operator[](size_t idx) { return get(idx); }
   const Event *operator[](size_t idx) const { return get(idx); }
 
-  size_t size() const { return _events.size(); }
+  size_t size() const { return _size; }
 };
 
 class Inputs;
