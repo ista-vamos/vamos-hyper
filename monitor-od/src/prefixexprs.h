@@ -89,6 +89,15 @@ struct mPE_1 {
     return res;
   }
 
+  template <size_t idx>
+  PEStepResult step(const Event *ev, size_t pos) {
+    assert(idx < 2);
+    auto res = _exprs[idx].step(ev, pos);
+    if (res == PEStepResult::Accept)
+      _accepted[idx] = true;
+    return res;
+  }
+
   template <typename TraceT> bool cond(TraceT *t1, TraceT *t2) const {
     return *static_cast<TraceEvent *>(t1->get(_exprs[0].match_pos))
             == *static_cast<TraceEvent *>(t2->get(_exprs[1].match_pos));
@@ -103,6 +112,15 @@ struct mPE_2 {
   bool accepted() const { return _accepted[0] && _accepted[1]; }
 
   PEStepResult step(size_t idx, const Event *ev, size_t pos) {
+    assert(idx < 2);
+    auto res = _exprs[idx].step(ev, pos);
+    if (res == PEStepResult::Accept)
+      _accepted[idx] = true;
+    return res;
+  }
+
+  template <size_t idx>
+  PEStepResult step(const Event *ev, size_t pos) {
     assert(idx < 2);
     auto res = _exprs[idx].step(ev, pos);
     if (res == PEStepResult::Accept)
@@ -125,6 +143,15 @@ struct mPE_3 {
   bool accepted() const { return _accepted[0] && _accepted[1]; }
 
   PEStepResult step(size_t idx, const Event *ev, size_t pos) {
+    assert(idx < 2);
+    auto res = _exprs[idx].step(ev, pos);
+    if (res == PEStepResult::Accept)
+      _accepted[idx] = true;
+    return res;
+  }
+
+  template <size_t idx>
+  PEStepResult step(const Event *ev, size_t pos) {
     assert(idx < 2);
     auto res = _exprs[idx].step(ev, pos);
     if (res == PEStepResult::Accept)

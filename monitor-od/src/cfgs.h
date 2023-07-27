@@ -120,7 +120,7 @@ public:
 
     const Event *ev = traces[idx]->get(positions[idx]);
     assert(ev && "No event");
-    auto res = mPE.step(idx, ev, positions[idx]);
+    auto res = mPE.step<idx>(ev, positions[idx]);
 
 #ifdef DEBUG
 #ifdef DEBUG_CFGS
@@ -169,7 +169,7 @@ public:
     while (N-- > 0) {
         const Event *ev = traces[idx]->get(positions[idx]);
         assert(ev && "No event");
-        auto res = mPE.step(idx, ev, positions[idx]);
+        auto res = mPE.template step<idx>(ev, positions[idx]);
 
 #ifdef DEBUG
 #ifdef DEBUG_CFGS

@@ -188,6 +188,9 @@ int monitor(Inputs &inputs) {
   Workbag workbag;
   Workbag new_workbag;
 
+  workbag.reserve(512);
+  new_workbag.reserve(512);
+
 
 #define STATS
 #ifdef STATS

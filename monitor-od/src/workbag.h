@@ -14,7 +14,9 @@ public:
   auto clear() -> auto{ return _queue.clear(); }
   auto swap(Workbag &rhs) -> auto{ return _queue.swap(rhs._queue); }
 
-  auto push(ConfigurationsSet<3> &&C) -> auto{
+  void reserve(size_t n) { _queue.reserve(n); }
+
+  auto push(ConfigurationsSet<3> &&C) -> auto {
     //return _queue.push(std::move(C));
     return _queue.push_back(std::move(C));
   }
