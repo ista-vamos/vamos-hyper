@@ -105,8 +105,12 @@ void update_traces(Inputs &inputs, WorkbagT &workbag, TracesT &traces,
       auto *trace = static_cast<Trace<TraceEvent> *>(stream->trace());
       trace->append(event);
 
-     //std::cout << "[Stream " << stream->id() << "] event: " << *event
-     //          << "\n";
+#ifdef DEBUG
+#ifdef DEBUG_EVENTS
+      std::cout << "[Stream " << stream->id() << "] event: " << *event
+                << "\n";
+#endif
+#endif
 
       if (stream->isDone()) {
         // std::cout << "Stream " << stream->id() << " DONE\n";
@@ -161,7 +165,9 @@ int monitor(Inputs &inputs) {
     max_wbg_size = std::max(wbg_size, max_wbg_size);
 #endif
 #ifdef DEBUG
+#ifdef DEBUG_WORKBAG
     std::cout << "WORKBAG size: " << wbg_size << "\n";
+#endif
 #endif
     for (auto &C : workbag) {
       if (C.invalid()) {
@@ -201,7 +207,10 @@ int monitor(Inputs &inputs) {
           case CFGSET_MATCHED:
 #ifdef OUTPUT
             std::cout
-                << "\033[1;31mOBSERVATIONAL DETERMINISM VIOLATED!\033[0m\n";
+                << "\033[1;31mOBSERVATIONAL DETERMINISM VIOLATED!\033[0m\n"
+                << "Traces:\n"
+                << "  " << cfg.trace(0)->descr() << "\n"
+                << "  " << cfg.trace(1)->descr() << "\n";
 #endif
 #ifdef EXIT_ON_ERROR
             goto violated;
@@ -227,7 +236,9 @@ int monitor(Inputs &inputs) {
           switch (move_cfg<Cfg_3>(new_workbag, cfg)) {
           case CFGSET_MATCHED:
 #ifdef OUTPUT
-            std::cout << "OD holds for these traces\n";
+            std::cout << "OD holds for traces `"
+                      << cfg.trace(0)->descr() << "` and `"
+                      << cfg.trace(1)->descr() << "`\n";
 #endif
           case CFGSET_DONE:
             C.setInvalid();

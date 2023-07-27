@@ -6,12 +6,14 @@
 #include <memory>
 #include <set>
 #include <vector>
+#include <string>
 
 #include <vamos-buffers/cpp/event.h>
 
 using vamos::Event;
 
 class TraceBase {
+  std::string _name;
   const size_t _id;
   bool _done{false};
 
@@ -21,6 +23,16 @@ public:
 
   bool done() const { return _done; }
   size_t id() const { return _id; }
+
+  void set_name(const std::string& n) { _name = n; }
+  const std::string &name() const { return _name; }
+  std::string descr() const {
+    if (_name.empty()) {
+      return std::to_string(_id);
+    }
+    return std::to_string(_id) + ": " + _name;
+  }
+
 };
 
 template <typename EventTy> class Trace : public TraceBase {
@@ -50,6 +62,8 @@ class Inputs;
 /// The incoming events are stored into the trace that is referenced in
 /// InputStream.
 class InputStream {
+  const std::string _name{};
+
 protected:
   const size_t _id;
   TraceBase *_trace;
@@ -61,9 +75,14 @@ protected:
 
 public:
   InputStream(size_t id) : _id(id) {}
+  InputStream(size_t id, const std::string& name) : _name(name), _id(id) {}
 
   size_t id() const { return _id; }
-  void setTrace(TraceBase *t) { _trace = t; }
+  void setTrace(TraceBase *t) {
+      _trace = t;
+      if (!_name.empty())
+        _trace->set_name(_name);
+  }
 
   TraceBase *trace() { return _trace; }
   const TraceBase *trace() const { return _trace; }

@@ -208,10 +208,12 @@ public:
     auto res = mPE.step(idx, ev, positions[idx]);
 
 #ifdef DEBUG
-    std::cout << "Cfg[" << this << "](tau_" << idx << ") t" << trace(idx)->id()
+#ifdef DEBUG_CFGS
+    std::cout << "Cfg[" << this << "](𝜏" << idx << ") t" << trace(idx)->id()
               << "[" << positions[idx] << "]"
               << "@" << *static_cast<const TraceEvent *>(ev) << ", "
               << positions[idx] << " => " << res << "\n";
+#endif
 #endif
 
     ++positions[idx];
