@@ -113,6 +113,50 @@ public:
     }
   }
 
+  template <size_t idx>
+  PEStepResult step() {
+    assert(canProceed<idx>() && "Step on invalid PE");
+    assert(!_failed);
+
+    const Event *ev = traces[idx]->get(positions[idx]);
+    assert(ev && "No event");
+    auto res = mPE.step(idx, ev, positions[idx]);
+
+#ifdef DEBUG
+#ifdef DEBUG_CFGS
+    std::cout << "(𝜏" << idx << ") t" << traces[idx]->id()
+              << "[" << positions[idx] << "]"
+              << "@" << *static_cast<const TraceEvent *>(ev) << ", "
+              << positions[idx] << " => " << res << "\n";
+#endif
+#endif
+
+    ++positions[idx];
+
+    switch (res) {
+    case PEStepResult::Accept:
+      if (mPE.accepted()) {
+        // std::cout << "mPE matched prefixes\n";
+        if (mPE.cond(trace(0), trace(1))) {
+          // std::cout << "Condition SAT!\n";
+          return PEStepResult::Accept;
+        } else {
+          // std::cout << "Condition UNSAT!\n";
+          _failed = true;
+          return PEStepResult::Reject;
+        }
+      }
+      return PEStepResult::None;
+    case PEStepResult::Reject:
+      _failed = true;
+      // fall-through
+    default:
+      return res;
+    }
+  }
+
+
+
   // Do as many steps as possible in this configuration
   template <size_t idx>
   PEStepResult stepN() {

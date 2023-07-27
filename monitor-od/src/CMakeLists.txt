@@ -1,9 +1,10 @@
 #target_compile_options(test2 PRIVATE -fsanitize=address,undefined)
 
 # do not read more than this number of events at once
-# if they are present on the input, so that we do not
-# get stalled in reading events only on one trace until
-# it is processed completely
+# if they are present on the input stream. If we have no
+# limit, we could get stalled in reading events only on one trace until
+# it is processed completely (which might, in theory, happen never).
+# The algorithm described in the paper has this set to 1.
 set(ONETIME_READ_EVENTS_LIMIT 128)
 
 add_library(monitor-od STATIC monitor.cpp private.cpp cfgs.cpp)
@@ -13,7 +14,7 @@ target_compile_definitions(monitor-od
 			   #PRIVATE EXIT_ON_ERROR=1
 			   PRIVATE REDUCT_SYMMETRY=1
 			   PRIVATE REDUCT_REFLEXIVITY=1
-			   PRIVATE MULTIPLE_MOVES=1
+			   PRIVATE MULTIPLE_MOVES=${ENABLE_MULTIPLE_MOVES}
 			   PRIVATE ONETIME_READ_EVENTS_LIMIT=${ONETIME_READ_EVENTS_LIMIT}
 			   )
 
@@ -30,7 +31,7 @@ target_compile_definitions(monitor-od-dbg
 			   PRIVATE DEBUG_WORKBAG=1
 			   PRIVATE REDUCT_SYMMETRY=1
 			   PRIVATE REDUCT_REFLEXIVITY=1
-			   PRIVATE MULTIPLE_MOVES=1
+			   PRIVATE MULTIPLE_MOVES=${ENABLE_MULTIPLE_MOVES}
 			   PRIVATE ONETIME_READ_EVENTS_LIMIT=${ONETIME_READ_EVENTS_LIMIT}
 			   )
 

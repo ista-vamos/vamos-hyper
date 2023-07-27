@@ -85,20 +85,33 @@ template <typename CfgTy> Actions move_cfg(Workbag &workbag, CfgTy &cfg) {
 #else // !MULTIPLE_MOVES
 
   bool no_progress = true;
-  for (size_t idx = 0; idx < 2; ++idx) {
-    if (cfg.canProceed(idx)) {
-      no_progress = false;
+  if (cfg.canProceed<0>()) {
+    no_progress = false;
 
-      auto res = cfg.step(idx);
-      if (res == PEStepResult::Accept) {
-        // std::cout << "CFG " << &c << " from " << &C << " ACCEPTED\n";
-        cfg.queueNextConfigurations(workbag);
-        return CFGSET_MATCHED;
-      }
-      if (res == PEStepResult::Reject) {
-        // std::cout << "CFG " << &c << " from " << &C << " REJECTED\n";
-        return CFG_FAILED;
-      }
+    auto res = cfg.step<0>();
+    if (res == PEStepResult::Accept) {
+      // std::cout << "CFG " << &c << " from " << &C << " ACCEPTED\n";
+      cfg.queueNextConfigurations(workbag);
+      return CFGSET_MATCHED;
+    }
+    if (res == PEStepResult::Reject) {
+      // std::cout << "CFG " << &c << " from " << &C << " REJECTED\n";
+      return CFG_FAILED;
+    }
+  }
+
+  if (cfg.canProceed<1>()) {
+    no_progress = false;
+
+    auto res = cfg.step<1>();
+    if (res == PEStepResult::Accept) {
+      // std::cout << "CFG " << &c << " from " << &C << " ACCEPTED\n";
+      cfg.queueNextConfigurations(workbag);
+      return CFGSET_MATCHED;
+    }
+    if (res == PEStepResult::Reject) {
+      // std::cout << "CFG " << &c << " from " << &C << " REJECTED\n";
+      return CFG_FAILED;
     }
   }
 
