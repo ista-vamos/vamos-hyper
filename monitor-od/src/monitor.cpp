@@ -53,15 +53,41 @@ enum Actions {
 
 // returns true to continue with next CFG
 template <typename CfgTy> Actions move_cfg(Workbag &workbag, CfgTy &cfg) {
+#ifdef DEBUG
+#ifdef DEBUG_CFGS
+      std::cout << "MOVE " << cfg.name() << ":\n";
+#endif
+#endif
+
+#ifdef MULTIPLE_MOVES
+    auto res = cfg.stepN();
+    if (res == PEStepResult::Accept) {
+      // std::cout << "CFG " << &c << " from " << &C << " ACCEPTED\n";
+      cfg.queueNextConfigurations(workbag);
+      return CFGSET_MATCHED;
+    }
+    if (res == PEStepResult::Reject) {
+      // std::cout << "CFG " << &c << " from " << &C << " REJECTED\n";
+      return CFG_FAILED;
+    }
+
+    if (cfg.canProceedN(0) == 0 &&
+        cfg.canProceedN(1) == 0) {
+        // check if the traces are done
+        for (size_t idx = 0; idx < 2; ++idx) {
+          if (!cfg.trace(idx)->done())
+            return NONE;
+        }
+        // std::cout << "CFG discarded becase it has read traces entirely\n";
+        return CFGSET_DONE;
+    }
+
+#else // !MULTIPLE_MOVES
+
   bool no_progress = true;
   for (size_t idx = 0; idx < 2; ++idx) {
     if (cfg.canProceed(idx)) {
       no_progress = false;
-#ifdef DEBUG
-#ifdef DEBUG_CFGS
-      std::cout << "MOVE " << cfg.name() << ": ";
-#endif
-#endif
 
       auto res = cfg.step(idx);
       if (res == PEStepResult::Accept) {
@@ -85,6 +111,7 @@ template <typename CfgTy> Actions move_cfg(Workbag &workbag, CfgTy &cfg) {
     // std::cout << "CFG discarded becase it has read traces entirely\n";
     return CFGSET_DONE;
   }
+#endif // MULTIPLE_MOVES
 
   return NONE;
 }
@@ -106,7 +133,8 @@ void update_traces(Inputs &inputs, WorkbagT &workbag, TracesT &traces,
   // copy events from input streams to traces
   std::set<InputStream *> remove_online_traces;
   for (auto *stream : online_traces) {
-    if (stream->hasEvent()) {
+    size_t n = 0;
+    while (stream->hasEvent() && (n++ < ONETIME_READ_EVENTS_LIMIT)) {
       auto *event = static_cast<TraceEvent *>(stream->getEvent());
       auto *trace = static_cast<Trace<TraceEvent> *>(stream->trace());
       trace->append(event);
@@ -123,6 +151,7 @@ void update_traces(Inputs &inputs, WorkbagT &workbag, TracesT &traces,
         remove_online_traces.insert(stream);
         trace->append(TraceEvent(Event::doneKind(), trace->size()));
         trace->setDone();
+        break;
       }
     }
   }

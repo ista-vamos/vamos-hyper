@@ -12,6 +12,8 @@ class Workbag;
 
 class ConfigurationBase {};
 
+///
+/// Configuration is the state of evaluating an edge
 template <typename TraceTy>
 class Configuration : public ConfigurationBase {
 
@@ -35,6 +37,7 @@ public:
 
   TraceTy *trace(size_t idx) { return traces[idx]; }
   const TraceTy *trace(size_t idx) const { return traces[idx]; }
+  size_t pos(size_t idx) const { return positions[idx]; }
 
   bool failed() const { return _failed; }
 };
@@ -48,6 +51,21 @@ protected:
 public:
   bool canProceed(size_t idx) const {
     return !mPE.accepted(idx) && trace(idx)->size() > positions[idx];
+  }
+
+  template <size_t idx>
+  bool canProceed() const {
+    return !mPE.accepted(idx) && trace(idx)->size() > positions[idx];
+  }
+
+  // how many steps can we proceed?
+  size_t canProceedN(size_t idx) const {
+      return trace(idx)->size() - pos(idx);
+  }
+
+  template <size_t idx>
+  size_t canProceedN() const {
+      return trace(idx)->size() - pos(idx);
   }
 
   void queueNextConfigurations(Workbag &) {
@@ -94,6 +112,66 @@ public:
       return res;
     }
   }
+
+  // Do as many steps as possible in this configuration
+  template <size_t idx>
+  PEStepResult stepN() {
+    assert(!_failed);
+
+    if (!canProceed<idx>())
+        return PEStepResult::None;
+
+    size_t N = canProceedN<idx>();
+    while (N-- > 0) {
+        const Event *ev = traces[idx]->get(positions[idx]);
+        assert(ev && "No event");
+        auto res = mPE.step(idx, ev, positions[idx]);
+
+#ifdef DEBUG
+#ifdef DEBUG_CFGS
+        std::cout << "(𝜏" << idx << ") t" << trace(idx)->id()
+                  << "[" << positions[idx] << "]"
+                  << "@" << *static_cast<const TraceEvent *>(ev) << ", "
+                  << positions[idx] << " => " << res << "\n";
+#endif
+#endif
+
+        ++positions[idx];
+
+        if (res != PEStepResult::None)
+            return res;
+    }
+    return PEStepResult::None;
+  }
+
+  PEStepResult stepN() {
+    assert((canProceed(0) || canProceed(1)) && "Step on invalid MPE");
+    auto res1 = stepN<0>();
+    auto res2 = stepN<1>();
+
+    if (res1 == PEStepResult::Reject ||
+        res2 == PEStepResult::Reject) {
+        _failed = true;
+        return PEStepResult::Reject;
+    }
+
+    if (res1 == PEStepResult::Accept ||
+        res2 == PEStepResult::Accept) {
+      if (mPE.accepted()) {
+        // std::cout << "mPE matched prefixes\n";
+        if (mPE.cond(trace(0), trace(1))) {
+          // std::cout << "Condition SAT!\n";
+          return PEStepResult::Accept;
+        } else {
+          // std::cout << "Condition UNSAT!\n";
+          _failed = true;
+          return PEStepResult::Reject;
+        }
+      }
+    }
+    return PEStepResult::None;
+  }
+
 
   CfgTemplate() {}
   // CfgTemplate& operator=(const CfgTemplate&) = default;
