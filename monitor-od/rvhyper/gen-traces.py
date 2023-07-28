@@ -32,8 +32,8 @@ f"""
 The script will generate <number of traces> of length <length of traces>
 Traces will contain `in` events with probability p={p} and a dummy (false) events
 with complementary probability 1-p. The `in` event has atomic propositions
-in_0, in_1, ... in_{BITS-1}.
-They are populated from uniform range `(0, 2**BITS-1)`, i.e., together `in`
+in_0, in_1, ... in_(<bits>-1).
+They are populated from uniform range `(0, 2**<bits>-1)`, i.e., together `in`
 is a random unsigned number on `BITS` bits.
 The last event is an event that has also randomly set `out_*` bits.
 
@@ -46,9 +46,17 @@ TRACE_NUM = int(sys.argv[1])
 TRACE_LEN = int(sys.argv[2])
 BITS = int(sys.argv[3])
 FORCE_OD = False
+OUTDIR="."
 if len(sys.argv) == 5:
-    if "force-od" in sys.argv[4]:
-        FORCE_OD = True
+    params = sys.argv[4].split(",")
+    for param in params:
+        param = param.strip()
+        if "force-od" == param:
+            FORCE_OD = True
+        elif param.startswith("outdir="):
+            OUTDIR=param.split("=")[1]
+        else:
+            raise NotImplementedError(f"Unknown parameter: {param}")
 
 maxnum = (2**BITS) - 1
 
@@ -105,12 +113,12 @@ while trnum < TRACE_NUM:
         else:
             gen_traces[h1] = t_tmp[-1]
 
-    with open(f"{trnum}.tr", "w") as tf:
+    with open(f"{OUTDIR}/{trnum}.tr", "w") as tf:
         for e1 in t_tmp:
             print(e1.encode(), file=tf)
 
 # DUMP OD PROPERTY ON THE GIVEN NUMBER OF BYTES
-with open(f"od-{BITS}b.hltl", "w") as f:
+with open(f"{OUTDIR}/od-{BITS}b.hltl", "w") as f:
     f.write("forall x. forall y.\n(\n")
     for b in range(0, BITS):
         f.write(" & " if b > 0 else "   ")
@@ -121,6 +129,7 @@ with open(f"od-{BITS}b.hltl", "w") as f:
         f.write(f"(in_{b}_x <-> in_{b}_y)\n")
     f.write(")\n")
 
+print(f"Output dir: {OUTDIR}")
 print(f"Forced OD: {FORCE_OD}")
 print(f"Generated {trnum} traces", file=sys.stderr)
 
