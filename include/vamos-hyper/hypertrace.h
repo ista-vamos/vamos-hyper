@@ -5,11 +5,10 @@ namespace vamos {
 namespace hyper {
 
 class HyperTrace {
-
-public:
+   public:
 };
 
-} // namespace hyper
-} // namespace vamos
+}  // namespace hyper
+}  // namespace vamos
 
-#endif // VAMOS_HYPER_TRACE_H
+#endif  // VAMOS_HYPER_TRACE_H

@@ -6,6 +6,6 @@
 int monitor(Inputs &inputs);
 
 int main() {
-  Inputs inputs;
-  return monitor(inputs);
+    Inputs inputs;
+    return monitor(inputs);
 }

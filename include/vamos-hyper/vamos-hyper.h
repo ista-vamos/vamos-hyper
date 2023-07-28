@@ -6,4 +6,4 @@
 #include <vamos-hyper/trace.h>
 #include <vamos-hyper/transformers.h>
 
-#endif // VAMOS_HYPER_H
+#endif  // VAMOS_HYPER_H

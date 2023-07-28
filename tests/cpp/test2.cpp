@@ -1,121 +1,119 @@
-#include <iostream>
-
 #include <vamos-buffers/cpp/event.h>
 #include <vamos-hyper/localtrace.h>
 #include <vamos-hyper/vamos-hyper.h>
+
+#include <iostream>
 
 using namespace vamos::hyper;
 using vamos::Event;
 
 enum class Kind : vms_kind {
-  A,
-  B,
+    A,
+    B,
 };
 
 struct TEvent : Event {
-  union {
-    struct {
-      int x;
-    } A;
-    struct {
-      float x;
-    } B;
-  } data;
+    union {
+        struct {
+            int x;
+        } A;
+        struct {
+            float x;
+        } B;
+    } data;
 
-  TEvent() = default;
-  TEvent(Kind k, vms_eventid id) : Event((vms_kind)k, id) {}
+    TEvent() = default;
+    TEvent(Kind k, vms_eventid id) : Event((vms_kind)k, id) {}
 };
 
 struct Event_A : public TEvent {
-  Event_A() = default;
-  Event_A(vms_eventid id, int x) : TEvent(Kind::A, id) { data.A.x = x; }
+    Event_A() = default;
+    Event_A(vms_eventid id, int x) : TEvent(Kind::A, id) { data.A.x = x; }
 
-  int x() const { return data.A.x; }
+    int x() const { return data.A.x; }
 };
 
 struct Event_B : public TEvent {
-  Event_B() = default;
-  Event_B(vms_eventid id, float x) : TEvent(Kind::B, id) { data.B.x = x; }
+    Event_B() = default;
+    Event_B(vms_eventid id, float x) : TEvent(Kind::B, id) { data.B.x = x; }
 
-  float x() const { return data.B.x; }
+    float x() const { return data.B.x; }
 };
 
 struct TTransformer : public TraceTransformerNM<2, 4, TEvent> {
+    TTransformer(TracesPipeline &TP, const std::initializer_list<Trace *> &in)
+        : TraceTransformerNM(TP, in) {}
 
-  TTransformer(TracesPipeline &TP, const std::initializer_list<Trace *> &in)
-      : TraceTransformerNM(TP, in) {}
+    StepResult step_impl() override {
+        assert(inputs.size() == 2);
+        StepResult result = StepResult::NoEvent;
 
-  StepResult step_impl() override {
-    assert(inputs.size() == 2);
-    StepResult result = StepResult::NoEvent;
+        for (int i = 0; i < 2; ++i) {
+            if (auto *e = inputs[i]->get()) {
+                outputs[2 * i + 0]->push(*e);
+                outputs[2 * i + 1]->push(*e);
 
-    for (int i = 0; i < 2; ++i) {
-      if (auto *e = inputs[i]->get()) {
-        outputs[2 * i + 0]->push(*e);
-        outputs[2 * i + 1]->push(*e);
-
-        inputs[i]->consume();
-        result = StepResult::Progress;
-      }
+                inputs[i]->consume();
+                result = StepResult::Progress;
+            }
+        }
+        return result;
     }
-    return result;
-  }
 };
 
 struct OutTransformer : public TraceTransformerNM<4, 0, void> {
+    OutTransformer(TracesPipeline &TP, const TraceTransformer &in)
+        : TraceTransformerNM(TP, in) {}
 
-  OutTransformer(TracesPipeline &TP, const TraceTransformer &in)
-      : TraceTransformerNM(TP, in) {}
+    StepResult step_impl() override {
+        assert(inputs.size() == 2);
+        StepResult result = StepResult::NoEvent;
 
-  StepResult step_impl() override {
-    assert(inputs.size() == 2);
-    StepResult result = StepResult::NoEvent;
+        size_t n[4] = {0};
+        for (int i = 0; i < 4; ++i) {
+            if (input(i).has()) {
+                Event *e = input(i).get();
+                assert(e && "No event event when hasOutputOn() == true");
+                std::cout << "out " << i << "[" << n[i] << "]: ";
 
-    size_t n[4] = {0};
-    for (int i = 0; i < 4; ++i) {
-      if (input(i).has()) {
-        Event *e = input(i).get();
-        assert(e && "No event event when hasOutputOn() == true");
-        std::cout << "out " << i << "[" << n[i] << "]: ";
-
-        if (e->get_kind() == (vms_kind)Kind::A) {
-          std::cout << static_cast<Event_A *>(e)->x() << "\n";
-        } else if (e->get_kind() == (vms_kind)Kind::B) {
-          std::cout << static_cast<Event_B *>(e)->x() << "\n";
+                if (e->get_kind() == (vms_kind)Kind::A) {
+                    std::cout << static_cast<Event_A *>(e)->x() << "\n";
+                } else if (e->get_kind() == (vms_kind)Kind::B) {
+                    std::cout << static_cast<Event_B *>(e)->x() << "\n";
+                }
+                ++n[i];
+                input(i).consume();
+                result = StepResult::Progress;
+            }
         }
-        ++n[i];
-        input(i).consume();
-        result = StepResult::Progress;
-      }
+        return result;
     }
-    return result;
-  }
 };
 
 int main() {
-  TracesPipeline TP;
+    TracesPipeline TP;
 
-  // dummy traces for testing
-  Trace *trace = new LocalTrace<TEvent>(TP);
-  Trace *trace2 = new LocalTrace<TEvent>(TP);
-  for (int x = 1; x < 10; ++x) {
-    trace->push(Event_A(x, x));
-  }
-  trace->setFinished();
+    // dummy traces for testing
+    Trace *trace = new LocalTrace<TEvent>(TP);
+    Trace *trace2 = new LocalTrace<TEvent>(TP);
+    for (int x = 1; x < 10; ++x) {
+        trace->push(Event_A(x, x));
+    }
+    trace->setFinished();
 
-  for (int x = 10; x < 20; ++x) {
-    trace2->push(Event_B(x, x + 0.5));
-  }
-  trace2->setFinished();
+    for (int x = 10; x < 20; ++x) {
+        trace2->push(Event_B(x, x + 0.5));
+    }
+    trace2->setFinished();
 
-  // create two transformers in the pipeline and run it
-  TraceTransformer *T = new TTransformer(TP, {trace, trace2});
-  auto *Out = new OutTransformer(TP, *T);
+    // create two transformers in the pipeline and run it
+    TraceTransformer *T = new TTransformer(TP, {trace, trace2});
+    auto *Out = new OutTransformer(TP, *T);
 
-  TP.run();
+    TP.run();
 
-  delete T;
-  delete Out;
-  delete trace;
-  delete trace2;
+    delete T;
+    delete Out;
+    delete trace;
+    delete trace2;
 }

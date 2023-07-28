@@ -6,13 +6,14 @@
 namespace vamos {
 namespace hyper {
 
-template <typename MsgT> void dbg(const MsgT &msg) {
-  std::cerr << "[vamos-hyper] ";
-  std::cerr << msg;
-  std::cerr << "\n";
+template <typename MsgT>
+void dbg(const MsgT &msg) {
+    std::cerr << "[vamos-hyper] ";
+    std::cerr << msg;
+    std::cerr << "\n";
 }
 
-} // namespace hyper
-} // namespace vamos
+}  // namespace hyper
+}  // namespace vamos
 
 #endif
