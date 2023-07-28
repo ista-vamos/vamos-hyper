@@ -4,6 +4,7 @@
 #include <vamos-buffers/cpp/event.h>
 
 #include <array>
+#include <cassert>
 #include <cstring>
 #include <memory>
 #include <set>
