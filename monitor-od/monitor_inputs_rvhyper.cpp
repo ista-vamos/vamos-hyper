@@ -53,13 +53,18 @@ Event *InputStream::getEvent() {
       } else {
           if (in_num) {
               // END
-              // convert the digits to number
-              unsigned pow = 1, N = 0;
+
+              // convert the string that holds the current number of the bit
+              // into an unsigned number
+              unsigned pow = 1;
+              unsigned N = 0;
               while (n-- > 0) {
                   N += (buff[n] - '0')*pow;
                   pow *= 10;
               }
-              *num |= 1 << N;
+              assert(N < 64 && "Our variables are at most 64-bit");
+              // set the Nth bit to true in the number
+              *num |= 1UL << N;
           }
           in_num = false;
       }
