@@ -4,9 +4,11 @@ from subprocess import Popen, PIPE
 from os.path import dirname, realpath, basename
 from os import listdir, access, X_OK
 from sys import argv
-from multiprocessing import Pool
+from multiprocessing import Pool, Lock
 
 bindir = f"{dirname(realpath(__file__))}/bin"
+
+lock = Lock()
 
 def run_one(arg):
     binary, n, l = arg
@@ -15,7 +17,7 @@ def run_one(arg):
 
     p = Popen(cmd, stderr=PIPE, stdout=PIPE)
     out, err = p.communicate()
-    assert p.returncode == 0, p
+    assert p.returncode in (0, 1), p
     assert err is not None, cmd
     assert out is not None, cmd
 
@@ -42,7 +44,8 @@ def run_one(arg):
             wall_time = float(parts[2][2:-7])
             mem = int(parts[5][:-13])/1024
 
-    print(binary, n, l, wbg_size, cpu_time, wall_time, mem)
+    with lock:
+        print(binary, n, l, wbg_size, cpu_time, wall_time, mem)
     #return (n, l, wbg_size, cpu_time, wall_time, mem)
 
 def get_params(binary):

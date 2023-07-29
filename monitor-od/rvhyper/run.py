@@ -5,11 +5,15 @@ from subprocess import Popen, PIPE, DEVNULL, run as runcmd
 from os.path import dirname, realpath, basename, join, isfile
 from os import listdir, access, X_OK, environ as ENV, symlink
 from sys import argv, stderr
-from multiprocessing import Pool
+from multiprocessing import Pool, Lock
+
+lock = Lock()
 
 bindir = f"{dirname(realpath(__file__))}/"
 binary = join(bindir, "monitor-rvhyper")
 rvhyper_dir = join(bindir, "rvhyper")
+
+TIMEOUT = 120
 
 def run_one(arg):
     traces_dir, traces_num, trace_len, bits = arg
@@ -33,9 +37,10 @@ def run_rvhyper(arg, files):
     traces_dir, traces_num, trace_len, bits = arg
     rvh = join(rvhyper_dir, "build/release/rvhyper")
     assert access(rvh, X_OK), f"Cannon find rvhyper binary, assumed is {rvh}"
-    cmd = ["/bin/time", rvh, "--quiet",
+    cmd = ["/bin/time", "-f", '%Uuser %Ssystem %eelapsed %PCPU (%Xavgtext+%Davgdata %Mmaxresident)k',
+           rvh, "--quiet", "--sequential",
            "-S", f"{traces_dir}/od-{bits}b.hltl"] + files
-    #print(" ".join(cmd))
+    # print("> ", " ".join(cmd))
 
     # symlink `eahyper` to the working directory, rvhyper assumes it there
     eahyper_link = join(traces_dir, "eahyper")
@@ -48,8 +53,13 @@ def run_rvhyper(arg, files):
     env["EAHYPER_SOLVER_DIR"] = join(rvhyper_dir, "LTL_SAT_solver")
     env["LD_LIBRARY_PATH"] = join(rvhyper_dir, "lib")
     p = Popen(cmd, stderr=PIPE, stdout=PIPE, cwd=traces_dir, env=env)
-    out, err = p.communicate()
-    assert p.returncode == 0, p
+    try:
+        out, err = p.communicate(TIMEOUT)
+    except TimeoutExpired:
+        p.kill()
+        out, err = p.communicate()
+    #print(p, p.returncode, out, err)
+    #assert p.returncode == 0, p
     assert err is not None, cmd
     #assert out is not None, cmd
 
@@ -62,18 +72,26 @@ def run_rvhyper(arg, files):
     wall_time=None
     mem=None
 
-    for line in err.splitlines():
-        if b"elapsed" in line:
-            parts = line.split()
-            assert b"user" in parts[0]
-            assert b"elapsed" in parts[2]
-            assert b"maxresident" in parts[5]
-            cpu_time = float(parts[0][:-4])
-            wall_time = float(parts[2][2:-7])
-            mem = int(parts[5][:-13])/1024
+    if p.returncode == 0:
+        for line in err.splitlines():
+            if b"elapsed" in line:
+                parts = line.split()
+                assert b"user" in parts[0]
+                assert b"elapsed" in parts[2]
+                assert b"maxresident" in parts[5]
 
-    print("rvhyper", traces_num, trace_len, bits, cpu_time, wall_time, mem)
+                try:
+                    cpu_time = float(parts[0][:-4])
+                    wall_time = float(parts[2][:-7])
+                    mem = int(parts[5][:-13])/1024
+                except ValueError as e:
+                    print(err, file=sys.stderr)
+                    raise e
+
+    with lock:
+        print("rvhyper-seq", traces_num, trace_len, bits, cpu_time, wall_time, mem, p.returncode)
     #return (n, l, wbg_size, cpu_time, wall_time, mem)
+    return 0
 
 
 
@@ -84,7 +102,7 @@ def run_monitor(arg, files):
     #print(cmd)
     p = Popen(cmd, stderr=PIPE, stdout=PIPE, cwd=traces_dir)
     out, err = p.communicate()
-    assert p.returncode == 0, p
+    #assert p.returncode == 0, p
     assert err is not None, cmd
     assert out is not None, cmd
 
@@ -96,22 +114,24 @@ def run_monitor(arg, files):
     cpu_time=None
     wall_time=None
     mem=None
-    for line in out.splitlines():
-        line = line.strip()
-        if line.startswith(b"Max workbag"):
-            wbg_size = int(line.split()[3])
+    if p.returncode in (0, 1):
+        for line in out.splitlines():
+            line = line.strip()
+            if line.startswith(b"Max workbag"):
+                wbg_size = int(line.split()[3])
 
-    for line in err.splitlines():
-        if b"elapsed" in line:
-            parts = line.split()
-            assert b"user" in parts[0]
-            assert b"elapsed" in parts[2]
-            assert b"maxresident" in parts[5]
-            cpu_time = float(parts[0][:-4])
-            wall_time = float(parts[2][2:-7])
-            mem = int(parts[5][:-13])/1024
+        for line in err.splitlines():
+            if b"elapsed" in line:
+                parts = line.split()
+                assert b"user" in parts[0]
+                assert b"elapsed" in parts[2]
+                assert b"maxresident" in parts[5]
+                cpu_time = float(parts[0][:-4])
+                wall_time = float(parts[2][2:-7])
+                mem = int(parts[5][:-13])/1024
 
-    print("monitor-rvhyper", traces_num, trace_len, bits, wbg_size, cpu_time, wall_time, mem)
+    with lock:
+        print("mpt", traces_num, trace_len, bits, wbg_size, cpu_time, wall_time, mem, p.returncode)
     #return (n, l, wbg_size, cpu_time, wall_time, mem)
 
 traces_num = [500, 1000, 1500, 2000, 2500, 3000]
