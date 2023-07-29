@@ -15,6 +15,10 @@ rvhyper_dir = join(bindir, "rvhyper")
 
 TIMEOUT = 120
 
+def errlog(*args):
+    with open(join(dirname(__file__), "log.txt"), "w+") as logf:
+        print(*args, file=logf)
+
 def run_one(arg):
     traces_dir, traces_num, trace_len, bits = arg
 
@@ -55,6 +59,8 @@ def run_rvhyper(arg, files):
     p = Popen(cmd, stderr=PIPE, stdout=PIPE, cwd=traces_dir, env=env)
     try:
         out, err = p.communicate(TIMEOUT)
+        if p.returncode != 0:
+            errlog(p, out, err)
     except TimeoutExpired:
         p.kill()
         out, err = p.communicate()
@@ -65,8 +71,7 @@ def run_rvhyper(arg, files):
 
     # Max workbag size: 7391
     #Traces #: 500
-    #1.73user 0.03system 0:01.76elapsed 99%CPU (0avgtext+0avgdata 137604maxresident)k
-    #0inputs+0outputs (0major+34642minor)pagefaults 0swaps
+    #1.73user 0.03system 01.76elapsed 99%CPU (0avgtext+0avgdata 137604maxresident)k
     wbg_size=None
     cpu_time=None
     wall_time=None
@@ -83,7 +88,7 @@ def run_rvhyper(arg, files):
                 try:
                     cpu_time = float(parts[0][:-4])
                     wall_time = float(parts[2][:-7])
-                    mem = int(parts[5][:-13])/1024
+                    mem = int(parts[5][:-13])/1024.0
                 except ValueError as e:
                     print(err, file=sys.stderr)
                     raise e
@@ -97,14 +102,19 @@ def run_rvhyper(arg, files):
 
 def run_monitor(arg, files):
     traces_dir, traces_num, trace_len, bits = arg
-    cmd = ["/bin/time", binary]
+    cmd = ["/bin/time", "-f", '%Uuser %Ssystem %eelapsed %PCPU (%Xavgtext+%Davgdata %Mmaxresident)k',
+           binary]
     cmd += files
     #print(cmd)
     p = Popen(cmd, stderr=PIPE, stdout=PIPE, cwd=traces_dir)
-    out, err = p.communicate()
+    try:
+        out, err = p.communicate(TIMEOUT)
+    except TimeoutExpired:
+        p.kill()
+        out, err = p.communicate()
     #assert p.returncode == 0, p
+    # assert out is not None, cmd
     assert err is not None, cmd
-    assert out is not None, cmd
 
     # Max workbag size: 7391
     #Traces #: 500
@@ -127,8 +137,8 @@ def run_monitor(arg, files):
                 assert b"elapsed" in parts[2]
                 assert b"maxresident" in parts[5]
                 cpu_time = float(parts[0][:-4])
-                wall_time = float(parts[2][2:-7])
-                mem = int(parts[5][:-13])/1024
+                wall_time = float(parts[2][:-7])
+                mem = int(parts[5][:-13])/1024.0
 
     with lock:
         print("mpt", traces_num, trace_len, bits, wbg_size, cpu_time, wall_time, mem, p.returncode)

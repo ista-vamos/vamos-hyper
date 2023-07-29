@@ -7,24 +7,29 @@ from sys import argv
 from multiprocessing import Pool, Lock
 
 bindir = f"{dirname(realpath(__file__))}/bin"
+TIMEOUT = 120
 
 lock = Lock()
 
 def run_one(arg):
     binary, n, l = arg
-    cmd = ["/bin/time", f"{bindir}/{binary}"]
+    cmd = ["/bin/time", "-f", '%Uuser %Ssystem %eelapsed %PCPU (%Xavgtext+%Davgdata %Mmaxresident)k',
+           f"{bindir}/{binary}"]
     #print(cmd)
 
     p = Popen(cmd, stderr=PIPE, stdout=PIPE)
-    out, err = p.communicate()
-    assert p.returncode in (0, 1), p
+    try:
+        out, err = p.communicate(TIMEOUT)
+    except TimeoutExpired:
+        p.kill()
+        out, err = p.communicate()
+    #assert p.returncode in (0, 1), p
+    #assert out is not None, cmd
     assert err is not None, cmd
-    assert out is not None, cmd
 
     # Max workbag size: 7391
     #Traces #: 500
-    #1.73user 0.03system 0:01.76elapsed 99%CPU (0avgtext+0avgdata 137604maxresident)k
-    #0inputs+0outputs (0major+34642minor)pagefaults 0swaps
+    #1.73user 0.03system 01.76elapsed 99%CPU (0avgtext+0avgdata 137604maxresident)k
     wbg_size=None
     cpu_time=None
     wall_time=None
@@ -41,11 +46,11 @@ def run_one(arg):
             assert b"elapsed" in parts[2]
             assert b"maxresident" in parts[5]
             cpu_time = float(parts[0][:-4])
-            wall_time = float(parts[2][2:-7])
-            mem = int(parts[5][:-13])/1024
+            wall_time = float(parts[2][:-7])
+            mem = int(parts[5][:-13])/1024.0
 
     with lock:
-        print(binary, n, l, wbg_size, cpu_time, wall_time, mem)
+        print(binary, n, l, wbg_size, cpu_time, wall_time, mem, p.returncode)
     #return (n, l, wbg_size, cpu_time, wall_time, mem)
 
 def get_params(binary):
