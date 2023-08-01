@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from tempfile import mkdtemp
-from subprocess import Popen, PIPE, DEVNULL, run as runcmd
+from subprocess import Popen, PIPE, DEVNULL, run as runcmd, TimeoutExpired
 from os.path import dirname, realpath, basename, join, isfile
 from os import listdir, access, X_OK, environ as ENV, symlink
 from sys import argv, stderr
@@ -16,8 +16,9 @@ rvhyper_dir = join(bindir, "rvhyper")
 TIMEOUT = 120
 
 def errlog(*args):
-    with open(join(dirname(__file__), "log.txt"), "w+") as logf:
-        print(*args, file=logf)
+    with open(join(dirname(__file__), "log.txt"), "a") as logf:
+        for a in args:
+            print(a, file=logf)
 
 def run_one(arg):
     traces_dir, traces_num, trace_len, bits = arg
@@ -36,14 +37,19 @@ def run_one(arg):
     # run rvhyper
     run_rvhyper(arg, files)
 
+    # run rvhyper with --sequential
+    run_rvhyper(arg, files, ["--sequential"], "-seq")
 
-def run_rvhyper(arg, files):
+
+def run_rvhyper(arg, files, rvh_args=None, name_suffix=""):
     traces_dir, traces_num, trace_len, bits = arg
     rvh = join(rvhyper_dir, "build/release/rvhyper")
     assert access(rvh, X_OK), f"Cannon find rvhyper binary, assumed is {rvh}"
     cmd = ["/bin/time", "-f", '%Uuser %Ssystem %eelapsed %PCPU (%Xavgtext+%Davgdata %Mmaxresident)k',
-           rvh, "--quiet", "--sequential",
-           "-S", f"{traces_dir}/od-{bits}b.hltl"] + files
+           rvh, "--quiet"]
+    if rvh_args:
+        cmd += rvh_args
+    cmd += ["-S", f"{traces_dir}/od-{bits}b.hltl"] + files
     # print("> ", " ".join(cmd))
 
     # symlink `eahyper` to the working directory, rvhyper assumes it there
@@ -58,9 +64,9 @@ def run_rvhyper(arg, files):
     env["LD_LIBRARY_PATH"] = join(rvhyper_dir, "lib")
     p = Popen(cmd, stderr=PIPE, stdout=PIPE, cwd=traces_dir, env=env)
     try:
-        out, err = p.communicate(TIMEOUT)
+        out, err = p.communicate(timeout=TIMEOUT)
         if p.returncode != 0:
-            errlog(p, out, err)
+            errlog(env, p, out, err)
     except TimeoutExpired:
         p.kill()
         out, err = p.communicate()
@@ -94,7 +100,7 @@ def run_rvhyper(arg, files):
                     raise e
 
     with lock:
-        print("rvhyper-seq", traces_num, trace_len, bits, cpu_time, wall_time, mem, p.returncode)
+        print(f"rvhyper{name_suffix}", traces_num, trace_len, bits, cpu_time, wall_time, mem, p.returncode)
     #return (n, l, wbg_size, cpu_time, wall_time, mem)
     return 0
 
@@ -108,7 +114,7 @@ def run_monitor(arg, files):
     #print(cmd)
     p = Popen(cmd, stderr=PIPE, stdout=PIPE, cwd=traces_dir)
     try:
-        out, err = p.communicate(TIMEOUT)
+        out, err = p.communicate(timeout=TIMEOUT)
     except TimeoutExpired:
         p.kill()
         out, err = p.communicate()
