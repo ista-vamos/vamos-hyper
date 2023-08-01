@@ -19,7 +19,7 @@ def run_one(arg):
 
     p = Popen(cmd, stderr=PIPE, stdout=PIPE)
     try:
-        out, err = p.communicate(TIMEOUT)
+        out, err = p.communicate(timeout=TIMEOUT)
     except TimeoutExpired:
         p.kill()
         out, err = p.communicate()
