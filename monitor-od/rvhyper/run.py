@@ -14,6 +14,10 @@ binary = join(bindir, "monitor-rvhyper")
 rvhyper_dir = join(bindir, "rvhyper")
 
 TIMEOUT = 120
+# Do not generate `traces_num` random traces, but generate just one
+# and use it `traces_num` times (this will force the monitors to
+# read entire traces to the end)
+REPEAT_ONE_TRACE = False
 
 def errlog(*args):
     with open(join(dirname(__file__), "log.txt"), "a") as logf:
@@ -24,12 +28,15 @@ def run_one(arg):
     traces_dir, traces_num, trace_len, bits = arg
 
     # get the list of files
-    files = []
-    for fl in listdir(traces_dir):
-        if fl.endswith(".tr"):
-            files.append(fl)
-            if len(files) == traces_num:
-                break
+    if REPEAT_ONE_TRACE:
+        files = ["1.tr"] * traces_num
+    else:
+        files = []
+        for fl in listdir(traces_dir):
+            if fl.endswith(".tr"):
+                files.append(fl)
+                if len(files) == traces_num:
+                    break
 
     # run our monitor
     run_monitor(arg, files)
@@ -157,21 +164,40 @@ def get_params(traces_dir, trace_len, bits):
     for N in traces_num:
         yield traces_dir, N, trace_len, bits
 
-def run(trace_len, bits):
-    proc_num=None
-    print(f"\033[1;34mRunning trace_len={trace_len}, bits={bits}\033[0m", file=stderr)
-    if len(argv) == 3:
-        proc_num=int(argv[2])
+def run(trace_len, bits, proc_num):
+    print(f"\033[1;34mRunning trace_len={trace_len}, bits={bits} [using {proc_num} workers]\033[0m", file=stderr)
+
+    if REPEAT_ONE_TRACE:
+        num = 1
+    else:
+        num = traces_num[-1]
 
     # generate all traces and then always take just some of them
     traces_dir = mkdtemp(prefix="/tmp/")
     runcmd(["python", f"{bindir}/gen-traces.py",
-            str(traces_num[-1]), str(trace_len), str(bits), f"force-od,outdir={traces_dir}"],
+            str(num), str(trace_len), str(bits), f"force-od,outdir={traces_dir}"],
            stderr=DEVNULL, stdout=DEVNULL, check=True)
 
     with Pool(processes=proc_num) as pool:
         result = pool.map(run_one, get_params(traces_dir, trace_len, bits))
 
-for trace_len in (100, 300, 500, 700, 1000):
-    for bits in (2,4,8,16,32,64):
-        run(trace_len, bits)
+proc_num=None
+if len(argv) == 2:
+    if argv[1] == "1t":
+        REPEAT_ONE_TRACE = True
+    else:
+        proc_num=int(argv[1])
+
+if len(argv) == 3:
+    if argv[1] == "1t":
+        REPEAT_ONE_TRACE = True
+        proc_num=int(argv[2])
+    elif argv[2] == "1t":
+        REPEAT_ONE_TRACE = True
+        proc_num=int(argv[1])
+    else:
+        raise RuntimeError(f"Unknown arguments: {argv}")
+
+for trace_len in (100, 500, 1000):
+    for bits in (1, 2, 4, 8, 16, 32, 64):
+        run(trace_len, bits, proc_num)
