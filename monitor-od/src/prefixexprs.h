@@ -35,6 +35,21 @@ struct PE2 : public PrefixExpression {
     PEStepResult step(const Event *ev, size_t pos) {
         const auto *e = static_cast<const TraceEvent *>(ev);
 
+#ifdef ASSUME_SYNC_TRACES
+        switch ((Kind)e->get_kind()) {
+            case Kind::OutputL:
+#ifndef NDEBUG
+                state = 1;
+#endif
+                // M.append(MString::Letter(pos, pos));
+                match_pos = pos;
+                return PEStepResult::Accept;
+            default:
+                assert(state == 0);
+                return PEStepResult::None;
+        }
+#else // ASSUME_SYNC_TRACES
+
         switch ((Kind)e->get_kind()) {
             case Kind::OutputL:
             case Kind::End:
@@ -51,11 +66,28 @@ struct PE2 : public PrefixExpression {
                 return PEStepResult::None;
         }
     }
+#endif // ASSUME_SYNC_TRACES
 };
 
 struct PE3 : public PrefixExpression {
     PEStepResult step(const Event *ev, size_t pos) {
         const auto *e = static_cast<const TraceEvent *>(ev);
+
+#ifdef ASSUME_SYNC_TRACES
+        switch ((Kind)e->get_kind()) {
+            case Kind::InputL:
+#ifndef NDEBUG
+                state = 1;
+#endif
+                match_pos = pos;
+                // M.append(MString::Letter(pos, pos));
+                return PEStepResult::Accept;
+            default:
+                assert(state == 0);
+                return PEStepResult::None;
+        }
+
+#else // ASSUME_SYNC_TRACES
 
         switch ((Kind)e->get_kind()) {
             case Kind::InputL:
@@ -71,6 +103,8 @@ struct PE3 : public PrefixExpression {
                 assert(state == 0);
                 return PEStepResult::None;
         }
+
+#endif // ASSUME_SYNC_TRACES
     }
 };
 
@@ -142,14 +176,6 @@ struct mPE_3 {
 
     bool accepted(size_t idx) const { return _accepted[idx]; }
     bool accepted() const { return _accepted[0] && _accepted[1]; }
-
-    PEStepResult step(size_t idx, const Event *ev, size_t pos) {
-        assert(idx < 2);
-        auto res = _exprs[idx].step(ev, pos);
-        if (res == PEStepResult::Accept)
-            _accepted[idx] = true;
-        return res;
-    }
 
     template <size_t idx>
     PEStepResult step(const Event *ev, size_t pos) {
